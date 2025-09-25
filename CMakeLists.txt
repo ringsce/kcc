@@ -6,6 +6,15 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# Detect architecture
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "^(aarch64|arm64)")
+    set(KCC_ARCH_ARM64 TRUE)
+    message(STATUS "Detected ARM64 architecture")
+elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "^(x86_64|amd64)")
+    set(KCC_ARCH_X86_64 TRUE)
+    message(STATUS "Detected x86_64 architecture")
+endif()
+
 # Compiler warning flags per platform
 if(MSVC)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /W4")
@@ -13,6 +22,13 @@ if(MSVC)
 elseif(CMAKE_C_COMPILER_ID MATCHES "Clang" OR CMAKE_C_COMPILER_ID STREQUAL "GNU")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
+
+    # ARM64-specific optimizations
+    if(KCC_ARCH_ARM64 AND UNIX AND NOT APPLE)
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mcpu=native")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mcpu=native")
+        message(STATUS "Added ARM64 native CPU optimizations")
+    endif()
 endif()
 
 # Debug flags
@@ -23,6 +39,12 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -O0 -DDEBUG")
 set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O3 -DNDEBUG")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -DNDEBUG")
 
+# ARM64-specific release optimizations for Linux
+if(KCC_ARCH_ARM64 AND UNIX AND NOT APPLE AND CMAKE_BUILD_TYPE STREQUAL "Release")
+    set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -ftree-vectorize")
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -ftree-vectorize")
+endif()
+
 # Platform-specific feature macros and linking
 if(WIN32)
     add_definitions(-D_CRT_SECURE_NO_WARNINGS)
@@ -30,6 +52,12 @@ elseif(APPLE)
     add_definitions(-D_GNU_SOURCE)
 elseif(UNIX)
     add_definitions(-D_GNU_SOURCE)
+
+    # ARM64 Linux specific definitions
+    if(KCC_ARCH_ARM64)
+        add_definitions(-DKCC_ARM64_LINUX)
+        message(STATUS "Added ARM64 Linux specific definitions")
+    endif()
 endif()
 
 # Include directories
@@ -79,6 +107,12 @@ if(APPLE)
     )
 elseif(UNIX AND NOT APPLE)
     target_link_libraries(kcc c m)
+
+    # ARM64 Linux specific linking
+    if(KCC_ARCH_ARM64)
+        # Add any ARM64-specific libraries if needed
+        message(STATUS "Configured linking for ARM64 Linux")
+    endif()
 endif()
 
 # Install target
@@ -117,6 +151,12 @@ if(TEST_SOURCES_EXIST)
         target_link_libraries(kcc_tests c)
     elseif(UNIX AND NOT APPLE)
         target_link_libraries(kcc_tests c m)
+
+        # ARM64 Linux specific linking for tests
+        if(KCC_ARCH_ARM64)
+            # Add any ARM64-specific libraries for tests if needed
+            message(STATUS "Configured test linking for ARM64 Linux")
+        endif()
     endif()
 
     add_test(NAME KCC_Tests COMMAND kcc_tests)
@@ -137,7 +177,15 @@ message(STATUS "  Build type: ${CMAKE_BUILD_TYPE}")
 message(STATUS "  C Compiler: ${CMAKE_C_COMPILER}")
 message(STATUS "  CXX Compiler: ${CMAKE_CXX_COMPILER}")
 message(STATUS "  Platform: ${CMAKE_SYSTEM_NAME}")
+message(STATUS "  Architecture: ${CMAKE_SYSTEM_PROCESSOR}")
+
+if(KCC_ARCH_ARM64)
+    message(STATUS "  ARM64 optimizations: Enabled")
+endif()
 
 if(APPLE OR UNIX)
     message(STATUS "  Feature macros: _GNU_SOURCE")
+    if(KCC_ARCH_ARM64 AND UNIX AND NOT APPLE)
+        message(STATUS "  ARM64 Linux macros: KCC_ARM64_LINUX")
+    endif()
 endif()
