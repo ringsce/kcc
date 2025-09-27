@@ -15,6 +15,14 @@
 #include <stdbool.h>
 #include <stdio.h>      // Add this for FILE type
 
+// Forward declarations to avoid circular dependencies - MOVED TO TOP
+struct ASTNode;
+typedef struct ASTNode ASTNode;
+struct SymbolTable;
+typedef struct SymbolTable SymbolTable;
+struct Symbol;
+typedef struct Symbol Symbol;
+
 /**
  * @brief Token types for lexical analysis
  *
@@ -184,9 +192,9 @@ typedef enum {
     TOKEN_COLON,          // : (used in Objective-C method names)
     TOKEN_QUESTION,       // ? (ternary operator)
     TOKEN_NEWLINE,
-    TOKEN_HASH ,
-    TOKEN_AMPERSAND,    // &
-    TOKEN_PIPE,         // |
+    TOKEN_HASH,
+    TOKEN_AMPERSAND,      // &
+    TOKEN_PIPE,           // |
     TOKEN_LESS
 
 } TokenType;
@@ -209,9 +217,8 @@ typedef enum {
     TYPE_STRUCT,          // Structure types
     TYPE_UNION,           // Union types
     TYPE_ENUM,
-    TYPE_TYPEDEF
-
-
+    TYPE_TYPEDEF,
+    TYPE_ARRAY            // Array types
 } DataType;
 
 /**
@@ -267,7 +274,7 @@ typedef enum {
     AST_STRING_LITERAL,
     AST_CHAR_LITERAL,
     AST_MEMBER_ACCESS,    // . and -> operators
-    AST_ARRAY_ACCESS,     // [] operator
+    AST_ARRAY_ACCESS,     // [] operator - ONLY DEFINED ONCE
     AST_TERNARY_OP,       // ? : operator
 
     // Objective-C Expressions
@@ -278,7 +285,7 @@ typedef enum {
     AST_OBJC_ENCODE_EXPR,     // @encode()
     AST_OBJC_BOOLEAN_LITERAL, // YES/NO
 
-    // Add these to your ASTNodeType enum in types.h
+    // Complex type definitions
     AST_TYPEDEF,
     AST_STRUCT,
     AST_UNION,
@@ -286,7 +293,13 @@ typedef enum {
     AST_ENUM_CONSTANT,
     AST_STRUCT_MEMBER,
     AST_BASIC_TYPE,
-    AST_VAR_DECL,  // Make sure this exists too
+    AST_VAR_DECL,
+
+    // Array support
+    AST_ARRAY_DECLARATION,
+    AST_ARRAY_LITERAL,
+    AST_POINTER_DEREFERENCE,
+    AST_ADDRESS_OF,
 
     // Special
     AST_PROGRAM
@@ -342,16 +355,40 @@ typedef struct ObjCMethodParam {
     char *param_name;        // Parameter name
 } ObjCMethodParam;
 
+// Array-specific AST node structures - DEFINED BEFORE ASTNode
+typedef struct {
+    ASTNode* element_type;    // Type of array elements
+    ASTNode* size_expr;       // Size expression (can be NULL for unsized arrays)
+    int is_dynamic;           // 1 for dynamic arrays, 0 for static
+    int dimension_count;      // Number of dimensions
+    ASTNode** dimensions;     // Array of dimension expressions
+} ArrayDeclaration;
+
+typedef struct {
+    ASTNode* array_expr;      // Expression that evaluates to array
+    ASTNode* index_expr;      // Index expression
+} ArrayAccess;
+
+typedef struct {
+    ASTNode** elements;       // Array of element expressions
+    int element_count;        // Number of elements
+    ASTNode* element_type;    // Type of elements (inferred)
+} ArrayLiteral;
+
+typedef struct {
+    ASTNode* operand;         // Expression to take address of
+} AddressOf;
+
+typedef struct {
+    ASTNode* operand;         // Expression to dereference
+} PointerDereference;
+
 /**
  * @brief AST Node structure
  *
  * Main AST node structure supporting both C and Objective-C constructs.
  */
-// Replace the ASTNode structure in your types.h with this corrected version:
-
-// Replace the ASTNode structure in your types.h with this corrected version:
-
-typedef struct ASTNode {
+struct ASTNode {
     ASTNodeType type;
     DataType data_type;
     int line;
@@ -513,7 +550,7 @@ typedef struct ASTNode {
             bool value;                     // YES or NO
         } objc_boolean;
 
-        // NEW: Complex type definitions - these should be INSIDE the union
+        // Complex type definitions
         struct {
             struct ASTNode *base_type;
             char *alias_name;
@@ -553,8 +590,16 @@ typedef struct ASTNode {
             DataType type;
         } basic_type;
 
-    } data;  // This closes the union
-} ASTNode;
+        // Array support structures
+        ArrayDeclaration array_decl;
+        ArrayAccess array_access;
+        ArrayLiteral array_literal;
+        AddressOf address_of;
+        PointerDereference pointer_deref;
+
+    } data;  // This closes the union - ONLY ONE data union
+};
+
 /**
  * @brief Lexer structure
  */
@@ -592,11 +637,8 @@ typedef struct CodeGenerator {
     int label_counter;
     int temp_counter;
     bool objc_mode;              // Enable Objective-C code generation
+    SymbolTable *symbol_table;   // Now properly forward declared
 } CodeGenerator;
-
-// Forward declarations for other complex types
-typedef struct SymbolTable SymbolTable;
-typedef struct Symbol Symbol;
 
 // Utility function declarations
 const char* token_type_to_string(TokenType type);

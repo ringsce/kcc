@@ -916,3 +916,184 @@ void ast_set_member_type_node(ASTNode *member, ASTNode *type_node) {
 
     member->data.struct_member.type_node = type_node;
 }
+
+
+// arrays
+// Add these functions to your ast.c file:
+
+#include "ast.h"
+#include <stdlib.h>
+#include <string.h>
+
+// Create array declaration AST node
+ASTNode* ast_create_array_declaration(ASTNode* element_type, ASTNode* size_expr,
+                                     int is_dynamic, int line, int column) {
+    ASTNode* node = malloc(sizeof(ASTNode));
+    if (!node) return NULL;
+
+    node->type = AST_ARRAY_DECLARATION;
+    node->data_type = TYPE_ARRAY;
+    node->line = line;
+    node->column = column;
+
+    node->data.array_decl.element_type = element_type;
+    node->data.array_decl.size_expr = size_expr;
+    node->data.array_decl.is_dynamic = is_dynamic;
+    node->data.array_decl.dimension_count = 1;
+
+    // Allocate and set single dimension
+    node->data.array_decl.dimensions = malloc(sizeof(ASTNode*));
+    node->data.array_decl.dimensions[0] = size_expr;
+
+    return node;
+}
+
+// Create multidimensional array declaration
+ASTNode* ast_create_multidim_array_declaration(ASTNode* element_type,
+                                              ASTNode** dimensions, int dim_count,
+                                              int line, int column) {
+    ASTNode* node = malloc(sizeof(ASTNode));
+    if (!node) return NULL;
+
+    node->type = AST_ARRAY_DECLARATION;
+    node->data_type = TYPE_ARRAY;
+    node->line = line;
+    node->column = column;
+
+    node->data.array_decl.element_type = element_type;
+    node->data.array_decl.size_expr = (dim_count > 0) ? dimensions[0] : NULL;
+    node->data.array_decl.is_dynamic = 0;  // Multidim arrays are typically static
+    node->data.array_decl.dimension_count = dim_count;
+    node->data.array_decl.dimensions = dimensions;
+
+    return node;
+}
+
+// Create array access AST node
+ASTNode* ast_create_array_access(ASTNode* array_expr, ASTNode* index_expr,
+                                int line, int column) {
+    ASTNode* node = malloc(sizeof(ASTNode));
+    if (!node) return NULL;
+
+    node->type = AST_ARRAY_ACCESS;
+    node->data_type = TYPE_UNKNOWN; // Will be inferred from array_expr
+    node->line = line;
+    node->column = column;
+
+    node->data.array_access.array_expr = array_expr;
+    node->data.array_access.index_expr = index_expr;
+
+    return node;
+}
+
+// Create array literal AST node
+ASTNode* ast_create_array_literal(ASTNode** elements, int element_count,
+                                 int line, int column) {
+    ASTNode* node = malloc(sizeof(ASTNode));
+    if (!node) return NULL;
+
+    node->type = AST_ARRAY_LITERAL;
+    node->data_type = TYPE_ARRAY;
+    node->line = line;
+    node->column = column;
+
+    node->data.array_literal.elements = elements;
+    node->data.array_literal.element_count = element_count;
+    node->data.array_literal.element_type = NULL; // Will be inferred
+
+    return node;
+}
+
+// Create address-of operator AST node
+ASTNode* ast_create_address_of(ASTNode* operand, int line, int column) {
+    ASTNode* node = malloc(sizeof(ASTNode));
+    if (!node) return NULL;
+
+    node->type = AST_ADDRESS_OF;
+    node->data_type = TYPE_POINTER;
+    node->line = line;
+    node->column = column;
+
+    node->data.address_of.operand = operand;
+
+    return node;
+}
+
+// Create pointer dereference AST node
+ASTNode* ast_create_pointer_dereference(ASTNode* operand, int line, int column) {
+    ASTNode* node = malloc(sizeof(ASTNode));
+    if (!node) return NULL;
+
+    node->type = AST_POINTER_DEREFERENCE;
+    node->data_type = TYPE_UNKNOWN; // Will be inferred from operand
+    node->line = line;
+    node->column = column;
+
+    node->data.pointer_deref.operand = operand;
+
+    return node;
+}
+
+// Helper function to destroy array-related AST nodes
+void ast_destroy_array_node(ASTNode* node) {
+    if (!node) return;
+
+    switch (node->type) {
+        case AST_ARRAY_DECLARATION:
+            if (node->data.array_decl.element_type) {
+                ast_destroy(node->data.array_decl.element_type);
+            }
+            if (node->data.array_decl.size_expr) {
+                ast_destroy(node->data.array_decl.size_expr);
+            }
+            if (node->data.array_decl.dimensions) {
+                for (int i = 0; i < node->data.array_decl.dimension_count; i++) {
+                    if (node->data.array_decl.dimensions[i]) {
+                        ast_destroy(node->data.array_decl.dimensions[i]);
+                    }
+                }
+                free(node->data.array_decl.dimensions);
+            }
+            break;
+
+        case AST_ARRAY_ACCESS:
+            if (node->data.array_access.array_expr) {
+                ast_destroy(node->data.array_access.array_expr);
+            }
+            if (node->data.array_access.index_expr) {
+                ast_destroy(node->data.array_access.index_expr);
+            }
+            break;
+
+        case AST_ARRAY_LITERAL:
+            if (node->data.array_literal.elements) {
+                for (int i = 0; i < node->data.array_literal.element_count; i++) {
+                    if (node->data.array_literal.elements[i]) {
+                        ast_destroy(node->data.array_literal.elements[i]);
+                    }
+                }
+                free(node->data.array_literal.elements);
+            }
+            if (node->data.array_literal.element_type) {
+                ast_destroy(node->data.array_literal.element_type);
+            }
+            break;
+
+        case AST_ADDRESS_OF:
+            if (node->data.address_of.operand) {
+                ast_destroy(node->data.address_of.operand);
+            }
+            break;
+
+        case AST_POINTER_DEREFERENCE:
+            if (node->data.pointer_deref.operand) {
+                ast_destroy(node->data.pointer_deref.operand);
+            }
+            break;
+
+        default:
+            break;
+    }
+
+    free(node);
+}

@@ -35,4 +35,13 @@ void codegen_number(CodeGenerator *codegen, ASTNode *node);
 void codegen_string(CodeGenerator *codegen, ASTNode *node);
 void codegen_assignment(CodeGenerator *codegen, ASTNode *node);
 
+// Array code generation functions
+void codegen_array_declaration(CodeGenerator *codegen, ASTNode *node);
+void codegen_array_access(CodeGenerator *codegen, ASTNode *node);
+void codegen_array_literal(CodeGenerator *codegen, ASTNode *node);
+void codegen_address_of(CodeGenerator *codegen, ASTNode *node);
+void codegen_pointer_dereference(CodeGenerator *codegen, ASTNode *node);
+void codegen_generate_array_runtime_includes(CodeGenerator *codegen);
+void codegen_generate_with_arrays(CodeGenerator *codegen, ASTNode *ast);
+
 #endif // CODEGEN_H

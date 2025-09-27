@@ -44,6 +44,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include "symbol_table.h"
 
 // Detect architecture at compile time
 #ifdef __aarch64__
@@ -56,7 +57,7 @@
 #error "Unsupported architecture"
 #endif
 
-CodeGenerator *codegen_create(const char *output_filename) {
+/*CodeGenerator *codegen_create(const char *output_filename) {
     CodeGenerator *codegen = malloc(sizeof(CodeGenerator));
     if (!codegen) {
         error_fatal("Memory allocation failed for code generator");
@@ -74,16 +75,42 @@ CodeGenerator *codegen_create(const char *output_filename) {
     codegen->temp_counter = 0;
 
     return codegen;
+}*/
+
+CodeGenerator *codegen_create(const char *output_filename) {
+    CodeGenerator *codegen = malloc(sizeof(CodeGenerator));
+    if (!codegen) {
+        return NULL;
+    }
+
+    // Open the output file using the filename parameter
+    codegen->output_file = fopen(output_filename, "w");
+    if (!codegen->output_file) {
+        free(codegen);
+        return NULL;
+    }
+
+    codegen->label_counter = 0;
+    codegen->temp_counter = 0;
+    codegen->objc_mode = false;
+    codegen->symbol_table = symbol_table_create();
+
+    return codegen;
 }
 
+// And make sure your destroy function properly closes the file:
 void codegen_destroy(CodeGenerator *codegen) {
     if (codegen) {
         if (codegen->output_file) {
             fclose(codegen->output_file);
         }
+        if (codegen->symbol_table) {
+            symbol_table_destroy(codegen->symbol_table);
+        }
         free(codegen);
     }
 }
+
 
 void codegen_emit(CodeGenerator *codegen, const char *format, ...) {
     va_list args;
@@ -626,4 +653,241 @@ void codegen_assignment(CodeGenerator *codegen, ASTNode *node) {
     codegen_emit(codegen, "    # Assign to %s", node->data.assignment.variable);
     codegen_emit(codegen, "    movq    %%rax, -8(%%rbp)");
 #endif
+}
+
+/* ============================================
+ * CODE GENERATION UPDATES (codegen.h and codegen.c)
+ * ============================================ */
+
+/* ============================================
+ * FIXED ARRAY CODE GENERATION FUNCTIONS - Replace broken ones in codegen.c
+ * ============================================ */
+
+// Helper function to generate code for visiting AST nodes
+void codegen_visit_node(CodeGenerator *codegen, ASTNode *node) {
+    if (!node) return;
+
+    switch (node->type) {
+        case AST_IDENTIFIER:
+            codegen_emit(codegen, "%s", node->data.identifier.name);
+            break;
+        case AST_NUMBER_LITERAL:
+            codegen_emit(codegen, "%d", node->data.number.value);
+            break;
+        case AST_BASIC_TYPE:
+            switch (node->data.basic_type.type) {
+                case TYPE_INT: codegen_emit(codegen, "int"); break;
+                case TYPE_FLOAT: codegen_emit(codegen, "float"); break;
+                case TYPE_DOUBLE: codegen_emit(codegen, "double"); break;
+                case TYPE_CHAR: codegen_emit(codegen, "char"); break;
+                default: codegen_emit(codegen, "void"); break;
+            }
+            break;
+        case AST_ARRAY_ACCESS:
+            codegen_array_access(codegen, node);
+            break;
+        case AST_ARRAY_DECLARATION:
+            codegen_array_declaration(codegen, node);
+            break;
+        case AST_ARRAY_LITERAL:
+            codegen_array_literal(codegen, node);
+            break;
+        default:
+            // Handle other node types or emit placeholder
+            codegen_emit(codegen, "/* unhandled node type %d */", node->type);
+            break;
+    }
+}
+
+// Generate code for array declaration
+void codegen_array_declaration(CodeGenerator *codegen, ASTNode *node) {
+    if (!node || node->type != AST_ARRAY_DECLARATION) {
+        return;
+    }
+
+    ArrayDeclaration *array_decl = &node->data.array_decl;
+
+    if (array_decl->is_dynamic) {
+        // Generate dynamic array allocation
+        codegen_emit(codegen, "// Dynamic array allocation\n");
+        codegen_emit(codegen, "void* array_data = malloc(sizeof(");
+        codegen_visit_node(codegen, array_decl->element_type);
+        codegen_emit(codegen, ") * (");
+        codegen_visit_node(codegen, array_decl->size_expr);
+        codegen_emit(codegen, "));\n");
+
+        // Generate array metadata structure
+        codegen_emit(codegen, "struct {\n");
+        codegen_emit(codegen, "    void* data;\n");
+        codegen_emit(codegen, "    int size;\n");
+        codegen_emit(codegen, "    int element_size;\n");
+        codegen_emit(codegen, "} array_meta = {\n");
+        codegen_emit(codegen, "    .data = array_data,\n");
+        codegen_emit(codegen, "    .size = (");
+        codegen_visit_node(codegen, array_decl->size_expr);
+        codegen_emit(codegen, "),\n");
+        codegen_emit(codegen, "    .element_size = sizeof(");
+        codegen_visit_node(codegen, array_decl->element_type);
+        codegen_emit(codegen, ")\n};\n");
+    } else {
+        // Generate static array declaration
+        codegen_visit_node(codegen, array_decl->element_type);
+        codegen_emit(codegen, " array_var[");
+        if (array_decl->size_expr) {
+            codegen_visit_node(codegen, array_decl->size_expr);
+        }
+        codegen_emit(codegen, "]");
+    }
+}
+
+// Generate code for array access with basic bounds checking
+void codegen_array_access(CodeGenerator *codegen, ASTNode *node) {
+    if (!node || node->type != AST_ARRAY_ACCESS) {
+        return;
+    }
+
+    ArrayAccess *array_access = &node->data.array_access;
+
+    // For now, generate simple array access without dynamic checking
+    // In a full implementation, you'd check symbol table for dynamic arrays
+    codegen_visit_node(codegen, array_access->array_expr);
+    codegen_emit(codegen, "[");
+    codegen_visit_node(codegen, array_access->index_expr);
+    codegen_emit(codegen, "]");
+}
+
+// Generate code for array access with bounds checking (enhanced version)
+void codegen_array_access_with_bounds_check(CodeGenerator *codegen, ASTNode *node) {
+    if (!node || node->type != AST_ARRAY_ACCESS) {
+        return;
+    }
+
+    ArrayAccess *array_access = &node->data.array_access;
+
+    // Generate bounds checking for arrays
+    codegen_emit(codegen, "((");
+    codegen_visit_node(codegen, array_access->index_expr);
+    codegen_emit(codegen, " >= 0) ? ");
+
+    // Generate array access
+    codegen_visit_node(codegen, array_access->array_expr);
+    codegen_emit(codegen, "[");
+    codegen_visit_node(codegen, array_access->index_expr);
+    codegen_emit(codegen, "] : ");
+
+    // Generate error handling for out of bounds
+    codegen_emit(codegen, "(fprintf(stderr, \"Array index out of bounds\\n\"), exit(1), 0))");
+}
+
+// Generate code for array literal
+void codegen_array_literal(CodeGenerator *codegen, ASTNode *node) {
+    if (!node || node->type != AST_ARRAY_LITERAL) {
+        return;
+    }
+
+    ArrayLiteral *array_literal = &node->data.array_literal;
+
+    codegen_emit(codegen, "{");
+    for (int i = 0; i < array_literal->element_count; i++) {
+        if (i > 0) {
+            codegen_emit(codegen, ", ");
+        }
+        codegen_visit_node(codegen, array_literal->elements[i]);
+    }
+    codegen_emit(codegen, "}");
+}
+
+// Generate code for address-of operator
+void codegen_address_of(CodeGenerator *codegen, ASTNode *node) {
+    if (!node || node->type != AST_ADDRESS_OF) {
+        return;
+    }
+
+    AddressOf *address_of = &node->data.address_of;
+
+    codegen_emit(codegen, "&(");
+    codegen_visit_node(codegen, address_of->operand);
+    codegen_emit(codegen, ")");
+}
+
+// Generate code for pointer dereference
+void codegen_pointer_dereference(CodeGenerator *codegen, ASTNode *node) {
+    if (!node || node->type != AST_POINTER_DEREFERENCE) {
+        return;
+    }
+
+    PointerDereference *pointer_deref = &node->data.pointer_deref;
+
+    codegen_emit(codegen, "*(");
+    codegen_visit_node(codegen, pointer_deref->operand);
+    codegen_emit(codegen, ")");
+}
+
+// Enhanced code generation dispatch function
+void codegen_generate_node(CodeGenerator *codegen, ASTNode *node) {
+    if (!node) return;
+
+    switch (node->type) {
+        case AST_ARRAY_DECLARATION:
+            codegen_array_declaration(codegen, node);
+            break;
+        case AST_ARRAY_ACCESS:
+            codegen_array_access(codegen, node);
+            break;
+        case AST_ARRAY_LITERAL:
+            codegen_array_literal(codegen, node);
+            break;
+        case AST_ADDRESS_OF:
+            codegen_address_of(codegen, node);
+            break;
+        case AST_POINTER_DEREFERENCE:
+            codegen_pointer_dereference(codegen, node);
+            break;
+        default:
+            // Fall back to existing code generation
+            codegen_visit_node(codegen, node);
+            break;
+    }
+}
+
+// Utility function to generate array runtime includes
+void codegen_generate_array_runtime_includes(CodeGenerator *codegen) {
+    codegen_emit(codegen, "// Array runtime support\n");
+    codegen_emit(codegen, "#include <stdio.h>\n");
+    codegen_emit(codegen, "#include <stdlib.h>\n");
+    codegen_emit(codegen, "#include <string.h>\n");
+    codegen_emit(codegen, "\n");
+
+    // Generate dynamic array structure definition
+    codegen_emit(codegen, "// Dynamic array structure\n");
+    codegen_emit(codegen, "typedef struct {\n");
+    codegen_emit(codegen, "    void* data;\n");
+    codegen_emit(codegen, "    int size;\n");
+    codegen_emit(codegen, "    int capacity;\n");
+    codegen_emit(codegen, "    int element_size;\n");
+    codegen_emit(codegen, "} DynamicArray;\n\n");
+
+    // Generate bounds checking macro
+    codegen_emit(codegen, "// Bounds checking macro\n");
+    codegen_emit(codegen, "#define ARRAY_BOUNDS_CHECK(arr, index) \\\n");
+    codegen_emit(codegen, "    do { \\\n");
+    codegen_emit(codegen, "        if ((index) < 0 || (index) >= (arr)->size) { \\\n");
+    codegen_emit(codegen, "            fprintf(stderr, \"Array index %%d out of bounds [0, %%d)\\n\", \\\n");
+    codegen_emit(codegen, "                    (index), (arr)->size); \\\n");
+    codegen_emit(codegen, "            exit(1); \\\n");
+    codegen_emit(codegen, "        } \\\n");
+    codegen_emit(codegen, "    } while(0)\n\n");
+}
+
+// Function to integrate array code generation into main codegen function
+void codegen_generate_with_arrays(CodeGenerator *codegen, ASTNode *ast) {
+    if (!codegen || !ast) {
+        return;
+    }
+
+    // Generate array runtime includes at the beginning
+    codegen_generate_array_runtime_includes(codegen);
+
+    // Generate main program code
+    codegen_generate_node(codegen, ast);
 }

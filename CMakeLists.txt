@@ -80,7 +80,6 @@ set(SHARED_SOURCES
 set(KCC_SOURCES
         src/main.c
         ${SHARED_SOURCES}
-
 )
 
 # Header files
@@ -94,6 +93,7 @@ set(KCC_HEADERS
         include/symbol_table.h
         include/preprocessor.h
         include/utils.h
+        include/array_runtime.h
 )
 
 # Create the main executable

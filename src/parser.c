@@ -1561,6 +1561,7 @@ ASTNode *parser_parse_for_statement(Parser *parser) {
     return ast_create_for_stmt(init, condition, update, body);
 }
 
+
 ASTNode *parser_parse_call_expression(Parser *parser, ASTNode *primary) {
     if (!primary || primary->type != AST_IDENTIFIER) {
         return primary;
@@ -1591,4 +1592,173 @@ ASTNode *parser_parse_call_expression(Parser *parser, ASTNode *primary) {
     ast_destroy(primary);
 
     return call;
+}
+
+
+/* ============================================
+ * PARSER UPDATES (parser.h and parser.c)
+ * ============================================ */
+
+/* ============================================
+ * FIXED ARRAY PARSING FUNCTIONS - Replace the broken ones at the end of parser.c
+ * ============================================ */
+
+// Parse array declaration
+ASTNode* parser_parse_array_declaration(Parser* parser, ASTNode* element_type) {
+    if (!parser_match(parser, TOKEN_LBRACKET)) {
+        return NULL;
+    }
+
+    int line = parser->current_token.line;   // Fixed: use . instead of ->
+    int column = parser->current_token.column;
+
+    parser_advance(parser); // consume '['
+
+    ASTNode* size_expr = NULL;
+    int is_dynamic = 0;
+
+    // Check for empty brackets (dynamic array or unsized)
+    if (!parser_match(parser, TOKEN_RBRACKET)) {
+        if (parser_match(parser, TOKEN_IDENTIFIER) &&
+            strcmp(parser->current_token.value, "dynamic") == 0) {
+            is_dynamic = 1;
+            parser_advance(parser);
+            parser_expect(parser, TOKEN_RBRACKET);
+        } else {
+            // Parse size expression
+            size_expr = parser_parse_expression(parser);  // Fixed: use correct function name
+            parser_expect(parser, TOKEN_RBRACKET);
+        }
+    } else {
+        parser_advance(parser); // consume ']'
+    }
+
+    return ast_create_array_declaration(element_type, size_expr, is_dynamic, line, column);
+}
+
+// Parse multidimensional array declaration
+ASTNode* parser_parse_multidim_array_declaration(Parser* parser, ASTNode* element_type) {
+    ASTNode** dimensions = malloc(sizeof(ASTNode*) * 10); // Max 10 dimensions
+    int dim_count = 0;
+    int line = parser->current_token.line;   // Fixed: use . instead of ->
+    int column = parser->current_token.column;
+
+    while (parser_match(parser, TOKEN_LBRACKET)) {
+        parser_advance(parser); // consume '['
+
+        if (parser_match(parser, TOKEN_RBRACKET)) {
+            dimensions[dim_count++] = NULL; // Unsized dimension
+        } else {
+            dimensions[dim_count++] = parser_parse_expression(parser);  // Fixed: use correct function name
+        }
+        parser_expect(parser, TOKEN_RBRACKET);
+    }
+
+    return ast_create_multidim_array_declaration(element_type, dimensions, dim_count, line, column);
+}
+
+// Parse array access
+ASTNode* parser_parse_array_access(Parser* parser, ASTNode* primary) {
+    while (parser_match(parser, TOKEN_LBRACKET)) {
+        int line = parser->current_token.line;   // Fixed: use . instead of ->
+        int column = parser->current_token.column;
+
+        parser_advance(parser); // consume '['
+
+        ASTNode* index = parser_parse_expression(parser);  // Fixed: use correct function name
+        parser_expect(parser, TOKEN_RBRACKET);
+
+        primary = ast_create_array_access(primary, index, line, column);
+    }
+
+    return primary;
+}
+
+// Parse array literal
+ASTNode* parser_parse_array_literal(Parser* parser) {
+    if (!parser_match(parser, TOKEN_LBRACE)) {
+        return NULL;
+    }
+
+    int line = parser->current_token.line;   // Fixed: use . instead of ->
+    int column = parser->current_token.column;
+
+    parser_advance(parser); // consume '{'
+
+    ASTNode** elements = malloc(sizeof(ASTNode*) * 1000); // Max 1000 elements initially
+    int element_count = 0;
+
+    if (!parser_match(parser, TOKEN_RBRACE)) {
+        do {
+            elements[element_count++] = parser_parse_expression(parser);  // Fixed: use correct function name
+
+            if (parser_match(parser, TOKEN_COMMA)) {
+                parser_advance(parser);
+            } else {
+                break;
+            }
+        } while (!parser_match(parser, TOKEN_RBRACE) && !parser_match(parser, TOKEN_EOF));
+    }
+
+    parser_expect(parser, TOKEN_RBRACE);
+
+    return ast_create_array_literal(elements, element_count, line, column);
+}
+
+// Parse address-of operator
+ASTNode* parser_parse_address_of(Parser* parser) {
+    if (!parser_match(parser, TOKEN_AMPERSAND)) {
+        return NULL;
+    }
+
+    int line = parser->current_token.line;   // Fixed: use . instead of ->
+    int column = parser->current_token.column;
+
+    parser_advance(parser); // consume '&'
+
+    ASTNode* operand = parser_parse_unary_expression(parser);  // Fixed: use existing function
+    return ast_create_address_of(operand, line, column);
+}
+
+// Parse pointer dereference
+ASTNode* parser_parse_pointer_dereference(Parser* parser) {
+    if (!parser_match(parser, TOKEN_MULTIPLY)) {
+        return NULL;
+    }
+
+    int line = parser->current_token.line;   // Fixed: use . instead of ->
+    int column = parser->current_token.column;
+
+    parser_advance(parser); // consume '*'
+
+    ASTNode* operand = parser_parse_unary_expression(parser);  // Fixed: use existing function
+    return ast_create_pointer_dereference(operand, line, column);
+}
+
+// Enhanced primary expression parsing to include arrays
+ASTNode *parser_parse_primary_expression_with_arrays(Parser *parser) {
+    ASTNode *primary = parser_parse_primary_expression(parser);
+
+    // Handle array access after primary expression
+    if (primary) {
+        primary = parser_parse_array_access(parser, primary);
+    }
+
+    return primary;
+}
+
+// Update unary expression parsing to include address-of and dereference
+ASTNode *parser_parse_unary_expression_with_pointers(Parser *parser) {
+    // Check for address-of operator
+    if (parser_match(parser, TOKEN_AMPERSAND)) {
+        return parser_parse_address_of(parser);
+    }
+
+    // Check for dereference operator
+    if (parser_match(parser, TOKEN_MULTIPLY)) {
+        return parser_parse_pointer_dereference(parser);
+    }
+
+    // Fall back to existing unary expression parsing
+    return parser_parse_unary_expression(parser);
 }

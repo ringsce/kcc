@@ -283,7 +283,6 @@ Token lexer_next_token(Lexer *lexer) {
             case '&': token.type = TOKEN_AMPERSAND; break;
             case '|': token.type = TOKEN_PIPE; break;
             case '%': token.type = TOKEN_MODULO; break;
-
             default: token.type = TOKEN_UNKNOWN; break;
         }
 

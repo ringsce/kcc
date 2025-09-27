@@ -3,6 +3,19 @@
 
 #include "types.h"
 
+// Function declarations for array AST nodes
+ASTNode* create_array_declaration(ASTNode* element_type, ASTNode* size_expr,
+                                 int is_dynamic, int line, int column);
+ASTNode* create_multidim_array_declaration(ASTNode* element_type,
+                                         ASTNode** dimensions, int dim_count,
+                                         int line, int column);
+ASTNode* create_array_access(ASTNode* array_expr, ASTNode* index_expr,
+                           int line, int column);
+ASTNode* create_array_literal(ASTNode** elements, int element_count,
+                            int line, int column);
+ASTNode* create_address_of(ASTNode* operand, int line, int column);
+ASTNode* create_pointer_dereference(ASTNode* operand, int line, int column);
+
 
 // AST creation functions
 ASTNode *ast_create_program(void);
@@ -63,4 +76,12 @@ void ast_add_struct_member(ASTNode *struct_node, ASTNode *member);
 void ast_add_union_member(ASTNode *union_node, ASTNode *member);
 void ast_add_enum_constant(ASTNode *enum_node, ASTNode *constant);
 void ast_set_member_type_node(ASTNode *member, ASTNode *type_node);
+
+// Add these to your ast.h file
+ASTNode* ast_create_array_declaration(ASTNode* element_type, ASTNode* size_expr, int is_dynamic, int line, int column);
+ASTNode* ast_create_multidim_array_declaration(ASTNode* element_type, ASTNode** dimensions, int dim_count, int line, int column);
+ASTNode* ast_create_array_access(ASTNode* array_expr, ASTNode* index_expr, int line, int column);
+ASTNode* ast_create_array_literal(ASTNode** elements, int element_count, int line, int column);
+ASTNode* ast_create_address_of(ASTNode* operand, int line, int column);
+ASTNode* ast_create_pointer_dereference(ASTNode* operand, int line, int column);
 #endif // AST_H
