@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
 project(KCC VERSION 1.10.0 LANGUAGES C CXX)
 
 set(CMAKE_C_STANDARD 17)
@@ -9,7 +9,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Detect architecture
 if(CMAKE_SYSTEM_PROCESSOR MATCHES "^(aarch64|arm64)")
     set(KCC_ARCH_ARM64 TRUE)
-    message(STATUS "Detected ARM64 architecture")
+    if(WIN32)
+        message(STATUS "Detected ARM64 architecture on Windows")
+    else()
+        message(STATUS "Detected ARM64 architecture")
+    endif()
 elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "^(x86_64|amd64)")
     set(KCC_ARCH_X86_64 TRUE)
     message(STATUS "Detected x86_64 architecture")
@@ -19,6 +23,16 @@ endif()
 if(MSVC)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /W4")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4")
+elseif(CMAKE_C_COMPILER_ID MATCHES "Embarcadero")
+    message(STATUS "Detected Embarcadero C++Builder")
+    # Add flags specific to C++Builder, e.g., -w++
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -w++")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -w++")
+    # Add ARM64-specific flags for C++Builder
+    if(KCC_ARCH_ARM64)
+        message(STATUS "Adding ARM64 flags for C++Builder")
+        # set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -FLAG_FOR_ARM") # Example
+    endif()
 elseif(CMAKE_C_COMPILER_ID MATCHES "Clang" OR CMAKE_C_COMPILER_ID STREQUAL "GNU")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
@@ -41,23 +55,23 @@ set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -DNDEBUG")
 
 # ARM64-specific release optimizations for Linux
 if(KCC_ARCH_ARM64 AND UNIX AND NOT APPLE AND CMAKE_BUILD_TYPE STREQUAL "Release")
-    set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -ftree-vectorize")
-    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -ftree-vectorize")
+set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -ftree-vectorize")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -ftree-vectorize")
 endif()
 
 # Platform-specific feature macros and linking
 if(WIN32)
-    add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 elseif(APPLE)
-    add_definitions(-D_GNU_SOURCE)
+add_definitions(-D_GNU_SOURCE)
 elseif(UNIX)
-    add_definitions(-D_GNU_SOURCE)
+add_definitions(-D_GNU_SOURCE)
 
-    # ARM64 Linux specific definitions
-    if(KCC_ARCH_ARM64)
-        add_definitions(-DKCC_ARM64_LINUX)
-        message(STATUS "Added ARM64 Linux specific definitions")
-    endif()
+# ARM64 Linux specific definitions
+if(KCC_ARCH_ARM64)
+add_definitions(-DKCC_ARM64_LINUX)
+message(STATUS "Added ARM64 Linux specific definitions")
+endif()
 endif()
 
 # Include directories
@@ -66,34 +80,34 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/macros)
 
 # Shared source files (excluding main.c for tests)
 set(SHARED_SOURCES
-        src/lexer.c
-        src/parser.c
-        src/ast.c
-        src/codegen.c
-        src/error.c
-        src/symbol_table.c
-        src/preprocessor.c
-        src/utils.c
+src/lexer.c
+src/parser.c
+src/ast.c
+src/codegen.c
+src/error.c
+src/symbol_table.c
+src/preprocessor.c
+src/utils.c
 )
 
 # Main executable source files
 set(KCC_SOURCES
-        src/main.c
-        ${SHARED_SOURCES}
+src/main.c
+${SHARED_SOURCES}
 )
 
 # Header files
 set(KCC_HEADERS
-        include/kcc.h
-        include/lexer.h
-        include/parser.h
-        include/ast.h
-        include/codegen.h
-        include/error.h
-        include/symbol_table.h
-        include/preprocessor.h
-        include/utils.h
-        include/array_runtime.h
+include/kcc.h
+include/lexer.h
+include/parser.h
+include/ast.h
+include/codegen.h
+include/error.h
+include/symbol_table.h
+include/preprocessor.h
+include/utils.h
+include/array_runtime.h
 )
 
 # Create the main executable
@@ -101,18 +115,18 @@ add_executable(kcc ${KCC_SOURCES} ${KCC_HEADERS})
 
 # Platform-specific linking
 if(APPLE)
-    target_link_libraries(kcc c)
-    set_target_properties(kcc PROPERTIES
-            MACOSX_DEPLOYMENT_TARGET "10.15"
-    )
+target_link_libraries(kcc c)
+set_target_properties(kcc PROPERTIES
+MACOSX_DEPLOYMENT_TARGET "10.15"
+)
 elseif(UNIX AND NOT APPLE)
-    target_link_libraries(kcc c m)
+target_link_libraries(kcc c m)
 
-    # ARM64 Linux specific linking
-    if(KCC_ARCH_ARM64)
-        # Add any ARM64-specific libraries if needed
-        message(STATUS "Configured linking for ARM64 Linux")
-    endif()
+# ARM64 Linux specific linking
+if(KCC_ARCH_ARM64)
+# Add any ARM64-specific libraries if needed
+message(STATUS "Configured linking for ARM64 Linux")
+endif()
 endif()
 
 # Install target
@@ -123,51 +137,51 @@ enable_testing()
 
 # Test files
 set(TEST_SOURCES
-        tests/test_lexer.c
-        tests/test_parser.c
-        tests/test_main.c
+[cite_start]tests/test_lexer.c [cite: 6]
+tests/test_parser.c
+tests/test_main.c
 )
 
 # Check if test files exist
 set(TEST_SOURCES_EXIST TRUE)
 foreach(test_file ${TEST_SOURCES})
-    if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${test_file}")
-        set(TEST_SOURCES_EXIST FALSE)
-        message(STATUS "Test file not found: ${test_file}")
-    endif()
+if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${test_file}")
+set(TEST_SOURCES_EXIST FALSE)
+message(STATUS "Test file not found: ${test_file}")
+endif()
 endforeach()
 
 # Create test executable only if all test files exist
 if(TEST_SOURCES_EXIST)
-    add_executable(kcc_tests
-            ${SHARED_SOURCES}    # All shared sources including lexer.c
-            ${TEST_SOURCES}      # Test files
-    )
+add_executable(kcc_tests
+${SHARED_SOURCES}    # All shared sources including lexer.c
+[cite_start]${TEST_SOURCES}      # Test files [cite: 7]
+)
 
-    target_include_directories(kcc_tests PRIVATE include)
+target_include_directories(kcc_tests PRIVATE include)
 
-    # Link the same libraries for tests
-    if(APPLE)
-        target_link_libraries(kcc_tests c)
-    elseif(UNIX AND NOT APPLE)
-        target_link_libraries(kcc_tests c m)
+# Link the same libraries for tests
+if(APPLE)
+target_link_libraries(kcc_tests c)
+elseif(UNIX AND NOT APPLE)
+target_link_libraries(kcc_tests c m)
 
-        # ARM64 Linux specific linking for tests
-        if(KCC_ARCH_ARM64)
-            # Add any ARM64-specific libraries for tests if needed
-            message(STATUS "Configured test linking for ARM64 Linux")
-        endif()
-    endif()
+# ARM64 Linux specific linking for tests
+if(KCC_ARCH_ARM64)
+# [cite_start]Add any ARM64-specific libraries for tests if needed [cite: 8]
+message(STATUS "Configured test linking for ARM64 Linux")
+endif()
+endif()
 
-    add_test(NAME KCC_Tests COMMAND kcc_tests)
+add_test(NAME KCC_Tests COMMAND kcc_tests)
 
-    # Custom target for running tests
-    add_custom_target(test_all
-            COMMAND ${CMAKE_CTEST_COMMAND} --verbose
-            DEPENDS kcc_tests
-    )
+# Custom target for running tests
+add_custom_target(test_all
+COMMAND ${CMAKE_CTEST_COMMAND} --verbose
+DEPENDS kcc_tests
+)
 else()
-    message(STATUS "Skipping test executable creation - test files not found")
+message(STATUS "Skipping test executable creation - test files not found")
 endif()
 
 # Print build configuration
@@ -180,12 +194,12 @@ message(STATUS "  Platform: ${CMAKE_SYSTEM_NAME}")
 message(STATUS "  Architecture: ${CMAKE_SYSTEM_PROCESSOR}")
 
 if(KCC_ARCH_ARM64)
-    message(STATUS "  ARM64 optimizations: Enabled")
+message(STATUS "  ARM64 optimizations: Enabled")
 endif()
 
 if(APPLE OR UNIX)
-    message(STATUS "  Feature macros: _GNU_SOURCE")
-    if(KCC_ARCH_ARM64 AND UNIX AND NOT APPLE)
-        message(STATUS "  ARM64 Linux macros: KCC_ARM64_LINUX")
-    endif()
+message(STATUS "  Feature macros: _GNU_SOURCE")
+if(KCC_ARCH_ARM64 AND UNIX AND NOT APPLE)
+message(STATUS "  ARM64 Linux macros: KCC_ARM64_LINUX")
+endif()
 endif()
