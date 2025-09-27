@@ -137,7 +137,7 @@ enable_testing()
 
 # Test files
 set(TEST_SOURCES
-[cite_start]tests/test_lexer.c [cite: 6]
+tests/test_lexer.c
 tests/test_parser.c
 tests/test_main.c
 )
@@ -155,7 +155,7 @@ endforeach()
 if(TEST_SOURCES_EXIST)
 add_executable(kcc_tests
 ${SHARED_SOURCES}    # All shared sources including lexer.c
-[cite_start]${TEST_SOURCES}      # Test files [cite: 7]
+${TEST_SOURCES}      # Test files
 )
 
 target_include_directories(kcc_tests PRIVATE include)
