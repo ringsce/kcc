@@ -2,11 +2,11 @@
 
 KCC is a simple, modular C/Objective-C compiler written from scratch in C. It is designed to be a learning tool for understanding the entire compilation pipeline, from preprocessing and tokenization to parsing, abstract syntax tree (AST) generation, and final assembly code generation.
 
-The compiler is cross-platform and can generate native assembly for both Apple Silicon (ARM64) and Intel/AMD (x86-64) architectures, with growing support for Objective-C language features and comprehensive array support.
+The compiler is cross-platform and can generate native assembly for both Apple Silicon (ARM64) and Intel/AMD (x86-64) architectures, with growing support for Objective-C language features, comprehensive array support, and advanced type system.
 
 ## Current Status & Features
 
-The compiler is functional and can compile a substantial subset of the C language with experimental Objective-C support and comprehensive array functionality.
+The compiler is functional and can compile a substantial subset of the C language with experimental Objective-C support, comprehensive array functionality, and advanced type system including complex numeric types and function pointers.
 
 ### Core Compiler Features
 
@@ -23,6 +23,33 @@ The compiler is functional and can compile a substantial subset of the C languag
 ✅ **Expressions**: Handles arithmetic, comparison, logical, and unary operators with correct precedence.
 
 ✅ **Variables & Functions**: Full support for declarations, assignments, parameter passing, and function calls.
+
+### Advanced Type System
+
+🆕 **Complete Numeric Types**: Full support for all C numeric types
+- Integer variants: `int`, `long`, `long long`, `short`
+- Unsigned variants: `unsigned int`, `unsigned long`, `unsigned short`
+- Floating point: `float`, `double`, `long double`
+- Character types: `char`, `signed char`, `unsigned char`
+- Type suffixes: `123L`, `456UL`, `3.14f`, literals with proper type inference
+
+🆕 **Function Pointers**: First-class function pointer support
+- Declaration syntax: `int (*func)(int, int)`
+- Assignment and invocation: `func = my_function; result = func(1, 2)`
+- Arrays of function pointers: `int (*operations[10])(int, int)`
+- Variadic function pointers: `void (*logger)(const char*, ...)`
+
+🆕 **Type Casting & Sizeof**: Advanced type operations
+- Explicit casting: `(int)3.14f`, `(float)my_integer`
+- Sizeof operator: `sizeof(int)`, `sizeof(my_array)`
+- Compile-time size calculation for arrays and structures
+- Runtime type information preservation
+
+🆕 **Enhanced String Handling**: Comprehensive character array support
+- String literals as character arrays: `char str[] = "Hello"`
+- Null terminator handling and bounds checking
+- String manipulation through pointer arithmetic
+- Mixed character and string operations
 
 ### Array & Pointer Support
 
@@ -46,15 +73,6 @@ The compiler is functional and can compile a substantial subset of the C languag
 - Dereference operator: `*pointer`
 - Pointer arithmetic and array-pointer equivalence
 
-### Objective-C Lexical Analysis
-
-🆕 **Enhanced Lexer**: Comprehensive support for Objective-C syntax:
-- @ tokens and directives (`@interface`, `@implementation`, `@protocol`, etc.)
-- Objective-C literals (`@"string"`, `@123`, `@[...]`, `@{...}`)
-- Property attributes (`atomic`, `nonatomic`, `retain`, `assign`, etc.)
-- Objective-C keywords (`id`, `self`, `super`, `nil`, `YES`, `NO`)
-- Foundation types (`NSString`, `NSArray`, `NSDictionary`)
-
 ### Complex Type System
 
 🆕 **Structure Support**: User-defined types with member access
@@ -73,6 +91,15 @@ The compiler is functional and can compile a substantial subset of the C languag
 🆕 **Typedef Support**: Type aliasing and abstraction
 - Custom type names for complex types
 - Enhanced code readability and maintainability
+
+### Objective-C Lexical Analysis
+
+🆕 **Enhanced Lexer**: Comprehensive support for Objective-C syntax:
+- @ tokens and directives (`@interface`, `@implementation`, `@protocol`, etc.)
+- Objective-C literals (`@"string"`, `@123`, `@[...]`, `@{...}`)
+- Property attributes (`atomic`, `nonatomic`, `retain`, `assign`, etc.)
+- Objective-C keywords (`id`, `self`, `super`, `nil`, `YES`, `NO`)
+- Foundation types (`NSString`, `NSArray`, `NSDictionary`)
 
 ## Quick Start & Build Instructions
 
@@ -112,6 +139,9 @@ You can use the KCC compiler from the command line with various options.
 # Compile with array runtime support
 ./kcc -arrays ../examples/array_test.c
 
+# Compile with type checking enabled
+./kcc -typecheck ../examples/complex_types.c
+
 # Specify an output file name
 ./kcc ../examples/test.c -o my_program
 
@@ -129,6 +159,71 @@ You can use the KCC compiler from the command line with various options.
 ```
 
 ## Example Programs
+
+### Complex Types Example
+
+Create a file named `complex_types.c`:
+
+```c
+// complex_types.c - Advanced type system demonstration
+#include <stdio.h>
+
+// Function pointer types
+typedef int (*BinaryOp)(int, int);
+typedef void (*Logger)(const char*, ...);
+
+// Mathematical operations
+int add(int a, int b) { return a + b; }
+int multiply(int a, int b) { return a * b; }
+int divide(int a, int b) { return b ? a / b : 0; }
+
+// Logging function
+void debug_log(const char* format, ...) {
+    printf("[DEBUG] ");
+    // Variadic implementation would go here
+}
+
+int main() {
+    // Advanced numeric types
+    long long huge_number = 9223372036854775807LL;
+    unsigned long positive_big = 4294967295UL;
+    float precision = 3.14159f;
+    long double extended = 3.141592653589793238L;
+    
+    // Character handling
+    char message[] = "Advanced C Compiler";
+    unsigned char bytes[4] = {0xFF, 0xFE, 0xFD, 0xFC};
+    
+    // Function pointer array (calculator operations)
+    BinaryOp operations[] = {add, multiply, divide};
+    const char* op_names[] = {"+", "*", "/"};
+    
+    // Demonstrate function pointer usage
+    for (int i = 0; i < 3; i++) {
+        int result = operations[i](15, 3);
+        printf("15 %s 3 = %d\n", op_names[i], result);
+    }
+    
+    // Type casting demonstrations
+    float f = 42.7f;
+    int truncated = (int)f;
+    double promoted = (double)truncated;
+    
+    // Sizeof operations
+    printf("Size of long long: %zu bytes\n", sizeof(long long));
+    printf("Size of function pointer: %zu bytes\n", sizeof(BinaryOp));
+    printf("Size of message array: %zu bytes\n", sizeof(message));
+    
+    // Pointer arithmetic with different types
+    long* long_ptr = &huge_number;
+    unsigned char* byte_ptr = bytes;
+    
+    printf("Huge number: %lld\n", *long_ptr);
+    printf("First byte: 0x%02X\n", *byte_ptr);
+    
+    return 0;
+}
+```
 
 ### C Example with Arrays
 
@@ -161,41 +256,46 @@ int main() {
 }
 ```
 
-### Advanced C Example with Structures
+### Advanced C Example with Structures and Function Pointers
 
 ```c
-// struct_test.c
+// advanced_example.c
+#include <stdio.h>
+
+// Structure with function pointer
 typedef struct {
-    int x, y;
     char name[20];
-} Point;
+    int (*calculate)(int, int);
+    double precision;
+} Calculator;
 
-union Data {
-    int i;
-    float f;
-    char str[4];
-};
+// Function pointer array for operations
+int add_func(int a, int b) { return a + b; }
+int sub_func(int a, int b) { return a - b; }
+int mul_func(int a, int b) { return a * b; }
 
-enum Color {
-    RED = 1,
-    GREEN,
-    BLUE
+// Array of calculators
+Calculator calculators[] = {
+    {"Adder", add_func, 1.0},
+    {"Subtractor", sub_func, 1.0},
+    {"Multiplier", mul_func, 1.0}
 };
 
 int main() {
-    Point points[3] = {
-        {0, 0, "Origin"},
-        {10, 20, "Point1"}, 
-        {30, 40, "Point2"}
-    };
+    // Demonstrate complex type interactions
+    for (unsigned int i = 0; i < sizeof(calculators)/sizeof(Calculator); i++) {
+        Calculator* calc = &calculators[i];
+        int result = calc->calculate(10, 5);
+        
+        printf("%s: 10 op 5 = %d (precision: %.1f)\n", 
+               calc->name, result, calc->precision);
+    }
     
-    union Data data;
-    data.i = 42;
+    // Type casting with function pointers
+    typedef int (*GenericFunc)(int, int);
+    GenericFunc generic = (GenericFunc)calculators[0].calculate;
     
-    enum Color favorite = BLUE;
-    
-    // Access struct members
-    points[1].x = 15;
+    printf("Generic call result: %d\n", generic(7, 3));
     
     return 0;
 }
@@ -239,10 +339,10 @@ Compile and run:
 
 ```bash
 # Compile the program
-./kcc array_test.c -o array_program
+./kcc complex_types.c -o complex_program
 
 # Run the compiled executable
-./array_program
+./complex_program
 
 # Check the exit code (should be 0 for this example)
 echo $?
@@ -250,7 +350,7 @@ echo $?
 
 ## Project Architecture
 
-The compiler follows a traditional pipeline structure with enhanced support for Objective-C and comprehensive array functionality.
+The compiler follows a traditional pipeline structure with enhanced support for Objective-C and comprehensive type system.
 
 ### File Structure:
 
@@ -259,9 +359,9 @@ kcc/
 ├── CMakeLists.txt          # Enhanced with ARM64 Linux support
 ├── include/                # Public headers for each module
 │   ├── kcc.h               # Main project header
-│   ├── types.h             # Enhanced type system with arrays
+│   ├── types.h             # Enhanced type system with complex types
 │   ├── lexer.h             # Multi-platform lexer
-│   ├── parser.h            # Extended parser with array support
+│   ├── parser.h            # Extended parser with type support
 │   ├── ast.h               # AST with complex type nodes
 │   ├── preprocessor.h      # Advanced preprocessing
 │   ├── codegen.h           # Cross-platform code generator
@@ -270,8 +370,8 @@ kcc/
 │   └── utils.h             # Utility functions
 ├── src/                    # Source code implementation
 │   ├── main.c              # Command-line interface
-│   ├── lexer.c             # Enhanced lexer with @ tokens
-│   ├── parser.c            # Extended parser with arrays/structs
+│   ├── lexer.c             # Enhanced lexer with numeric parsing
+│   ├── parser.c            # Extended parser with type parsing
 │   ├── ast.c               # AST construction and management
 │   ├── preprocessor.c      # Macro processing and includes
 │   ├── codegen.c           # Multi-platform code generation
@@ -285,6 +385,7 @@ kcc/
 └── examples/
     ├── basic/              # Basic C examples
     ├── arrays/             # Array manipulation examples
+    ├── types/              # Complex type examples
     ├── structs/            # Structure and union examples
     └── objc/               # Objective-C examples
 ```
@@ -293,22 +394,25 @@ kcc/
 
 1. **Preprocessor**: Handles `#include`, `#define`, `#import` directives with macro expansion
 2. **Lexer**: Tokenizes C and Objective-C source code with comprehensive token recognition
-3. **Parser**: Builds AST from tokens supporting arrays, structures, and Objective-C constructs
-4. **Semantic Analysis**: Advanced type checking, symbol resolution, and array bounds analysis
+3. **Parser**: Builds AST from tokens supporting arrays, structures, and complex types
+4. **Semantic Analysis**: Advanced type checking, symbol resolution, and type compatibility
 5. **Code Generation**: Produces optimized ARM64/x86-64 assembly with runtime support
 
 ## Roadmap & Future Work
 
-The foundation is solid with comprehensive array support and enhanced Objective-C lexical analysis. The next steps focus on expanding parsing and code generation capabilities.
+The foundation is solid with comprehensive type system and array support. The next steps focus on expanding parsing and optimization capabilities.
 
 ### Enhance C Language Support
 
 - [x] **Arrays and pointers** - Complete implementation with bounds checking
 - [x] **Structs and unions** - Full support with member access
 - [x] **Typedef and enums** - Type aliasing and named constants
-- [ ] More complex types (float, long, char arrays, function pointers)
+- [x] **Complex numeric types** - Full integer and floating-point type system
+- [x] **Function pointers** - Declaration, assignment, and invocation
+- [x] **Type casting and sizeof** - Advanced type operations
 - [ ] for loops and switch statements
-- [ ] Advanced pointer operations (pointer-to-pointer, function pointers)
+- [ ] Advanced pointer operations (pointer-to-pointer)
+- [ ] Volatile and const qualifiers
 
 ### Objective-C Parser Development
 
@@ -325,6 +429,7 @@ The foundation is solid with comprehensive array support and enhanced Objective-
 
 - [x] **Cross-platform assembly generation** - ARM64 and x86-64 support
 - [x] **Array runtime support** - Dynamic allocation and bounds checking
+- [x] **Complex type code generation** - Function pointers, casting, sizeof
 - [ ] Basic optimizations (constant folding, dead code elimination)
 - [ ] More robust stack management and calling conventions
 - [ ] Global variable support with proper linking
@@ -345,59 +450,65 @@ The foundation is solid with comprehensive array support and enhanced Objective-
 - [ ] Foundation framework integration
 - [ ] Objective-C runtime functions
 - [ ] Custom array runtime library
+- [ ] Math library integration for complex numeric operations
 
-## Array and Pointer Feature Details
+## Advanced Type Features
 
-### Static Arrays
+### Numeric Type System
 ```c
-int arr[10];                    // Fixed-size array
-int matrix[3][4];               // Multi-dimensional arrays
-int initialized[] = {1, 2, 3};  // Array literals with inference
+// Integer types with size guarantees
+long long huge = 9223372036854775807LL;
+unsigned long big = 4294967295UL;
+short small = 32767;
+unsigned char byte = 255U;
+
+// Floating point with precision control
+float f = 3.14159f;
+double d = 3.141592653589793;
+long double ld = 3.141592653589793238L;
 ```
 
-### Dynamic Arrays
+### Function Pointer System
 ```c
-int size = 10;
-int dynamic_arr[size];          // Variable-length arrays
+// Function pointer declarations
+int (*binary_op)(int, int);
+void (*callback)(void);
+float (*math_func)(float, float);
+
+// Function pointer arrays
+int (*operations[])(int, int) = {add, subtract, multiply};
+
+// Complex function pointer types
+typedef struct {
+    char* name;
+    int (*func)(int, int);
+} Operation;
 ```
 
-### Array Safety Features
-- Compile-time size validation
-- Optional runtime bounds checking
-- Memory leak detection
-- Array-to-pointer decay handling
-
-### Pointer Operations
+### Type Operations
 ```c
-int x = 42;
-int *ptr = &x;                  // Address-of operator
-int value = *ptr;               // Dereference operator
-ptr[0] = 100;                   // Array-style access
+// Explicit type casting
+int i = (int)3.14f;
+float f = (float)42;
+void* generic = (void*)&my_variable;
+
+// Sizeof operations
+size_t int_size = sizeof(int);
+size_t array_size = sizeof(my_array);
+size_t struct_size = sizeof(MyStruct);
 ```
 
-## Objective-C Feature Support
+### String and Character Handling
+```c
+// Character arrays (strings)
+char str1[] = "Hello, World!";
+char str2[100] = "Fixed size buffer";
+char* str3 = "Pointer to string literal";
 
-### ✅ Lexical Analysis (Complete)
-- @ symbol recognition and context-aware parsing
-- Complete directive support (@interface, @implementation, @protocol, etc.)
-- Property attribute parsing (atomic, nonatomic, retain, assign, copy, weak, strong)
-- Objective-C literal recognition (@"string", @123, @[...], @{...})
-- Foundation type integration (NSString, NSArray, NSDictionary, NSObject)
-- Memory management keywords (__strong, __weak, __unsafe_unretained)
-
-### 🚧 Parsing (In Progress)
-- Method declaration and implementation parsing
-- Interface and implementation block parsing
-- Property declaration with attribute handling
-- Protocol definition parsing
-- Message send syntax recognition
-
-### 📋 Code Generation (Planned)
-- Objective-C method dispatch
-- Message sending mechanism with runtime integration
-- Property accessor generation (getter/setter)
-- Memory management code generation
-- Runtime type information generation
+// Character manipulation
+unsigned char bytes[] = {0x41, 0x42, 0x43, 0x00}; // "ABC"
+signed char signed_bytes[] = {-128, -1, 0, 127};
+```
 
 ## Performance & Optimization
 
@@ -407,11 +518,12 @@ ptr[0] = 100;                   // Array-style access
 - **Cross-platform**: Optimized calling conventions
 - **Memory**: Efficient symbol table with hash-based lookup
 
-### Array Performance Features
-- Zero-copy array literals where possible
-- Optimized multi-dimensional array indexing
-- Efficient bounds checking with minimal overhead
-- Memory pool allocation for dynamic arrays
+### Type System Performance Features
+- Compile-time type checking and optimization
+- Efficient function pointer dispatch
+- Optimized numeric type conversions
+- Zero-overhead type casting where possible
+- Smart pointer arithmetic optimization
 
 ## Contributing
 
@@ -425,23 +537,14 @@ Contributions are welcome! The codebase is well-structured for adding new featur
 4. **Symbol Table**: Add symbol types and management in `src/symbol_table.c`
 5. **Code Generator**: Implement assembly generation in `src/codegen.c` for both ARM64 and x86-64
 
-### Array Feature Contributions
+### Type System Contributions
 
-When extending array functionality:
-- Maintain bounds checking consistency
-- Support both static and dynamic allocation patterns
-- Test on both ARM64 and x86-64 architectures
-- Consider memory management implications
-- Ensure compatibility with existing pointer arithmetic
-
-### Objective-C Contributions
-
-When contributing Objective-C features:
-- Ensure lexical tokens are properly defined and recognized
-- Build appropriate AST nodes that capture Objective-C semantics
-- Consider both traditional and modern Objective-C syntax
-- Test with complex Objective-C constructs (inheritance, categories, protocols)
-- Maintain compatibility with existing C compilation
+When extending the type system:
+- Ensure type safety and proper error checking
+- Support both compile-time and runtime type operations
+- Test type compatibility across different architectures
+- Consider performance implications of type conversions
+- Maintain backward compatibility with existing C standards
 
 ### Testing
 
@@ -453,6 +556,7 @@ make test_all
 # Run specific test categories
 make test_lexer
 make test_parser
+make test_types
 make test_arrays
 ```
 
@@ -474,4 +578,4 @@ This project is open source. Please refer to the LICENSE file for details.
 
 ---
 
-KCC demonstrates modern compiler design principles while supporting both traditional C programming with comprehensive array functionality and modern Objective-C development paradigms. The compiler serves as both a practical tool and an educational resource for understanding compilation techniques.
+KCC demonstrates modern compiler design principles while supporting comprehensive C programming with advanced type system, array functionality, and modern Objective-C development paradigms. The compiler serves as both a practical tool and an educational resource for understanding advanced compilation techniques and type system implementation.
