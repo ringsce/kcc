@@ -1762,3 +1762,4 @@ ASTNode *parser_parse_unary_expression_with_pointers(Parser *parser) {
     // Fall back to existing unary expression parsing
     return parser_parse_unary_expression(parser);
 }
+

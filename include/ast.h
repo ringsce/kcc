@@ -84,4 +84,23 @@ ASTNode* ast_create_array_access(ASTNode* array_expr, ASTNode* index_expr, int l
 ASTNode* ast_create_array_literal(ASTNode** elements, int element_count, int line, int column);
 ASTNode* ast_create_address_of(ASTNode* operand, int line, int column);
 ASTNode* ast_create_pointer_dereference(ASTNode* operand, int line, int column);
+
+// Add these declarations to ast.h
+ASTNode* ast_create_function_pointer(DataType return_type, const char* name,
+                                    ASTNode** param_types, int param_count);
+ASTNode* ast_create_sizeof_expr(ASTNode* operand);
+ASTNode* ast_create_cast_expr(DataType target_type, ASTNode* operand);
+ASTNode* ast_create_char_literal(char value);
+ASTNode* ast_create_float_literal(float value);
+ASTNode* ast_create_double_literal(double value);
+ASTNode* ast_create_long_literal(long value);
+
+// Add enhanced type checking
+bool parser_is_type_specifier_extended(TokenType type);
+
+// Add these to ast.h
+ASTNode* ast_create_arc_var_decl(DataType type, const char* name,
+                                 ASTNode* initializer, ARCQualifier qualifier);
+ASTNode* ast_create_bridge_cast(ARCBridgeCast bridge_type, ASTNode* operand,
+                                DataType target_type);
 #endif // AST_H

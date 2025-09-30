@@ -19,6 +19,14 @@ void ast_add_union_member(ASTNode *union_node, ASTNode *member);
 void ast_add_enum_constant(ASTNode *enum_node, ASTNode *constant);
 void ast_set_member_type_node(ASTNode *member, ASTNode *type_node);
 
+// Add this helper function right here
+bool is_objc_object_type(DataType type) {
+    return type == TYPE_ID ||
+           type == TYPE_CLASS ||
+           type == TYPE_SEL ||
+           type == TYPE_POINTER;
+}
+
 // Basic AST creation functions
 ASTNode *ast_create_program(void) {
     ASTNode *node = malloc(sizeof(ASTNode));
@@ -1096,4 +1104,38 @@ void ast_destroy_array_node(ASTNode* node) {
     }
 
     free(node);
+}
+
+/* ============================================
+ * STEP 4: Add these AST creation functions to ast.c
+ * ============================================ */
+
+// Add to ast.c
+
+ASTNode* ast_create_arc_var_decl(DataType type, const char* name,
+                                 ASTNode* initializer, ARCQualifier qualifier) {
+    ASTNode* node = malloc(sizeof(ASTNode));
+    if (!node) return NULL;
+
+    node->type = AST_VAR_DECL;
+    node->data_type = type;
+    node->line = 0;
+    node->column = 0;
+
+    // Initialize ARC info
+    node->arc_info.qualifier = qualifier;
+    node->arc_info.is_objc_object = is_objc_object_type(type);
+    node->arc_info.needs_retain = false;
+    node->arc_info.needs_release = (qualifier == ARC_QUALIFIER_STRONG &&
+                                   node->arc_info.is_objc_object);
+    node->arc_info.is_parameter = false;
+    node->arc_info.is_return_value = false;
+    node->arc_info.retain_count = 0;
+
+    node->data.var_decl.var_type = type;
+    node->data.var_decl.name = strdup(name);
+    node->data.var_decl.initializer = initializer;
+    node->data.var_decl.type_node = NULL;
+
+    return node;
 }

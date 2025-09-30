@@ -195,7 +195,18 @@ typedef enum {
     TOKEN_HASH,
     TOKEN_AMPERSAND,      // &
     TOKEN_PIPE,           // |
-    TOKEN_LESS
+    TOKEN_LESS,
+    // New type keywords
+    TOKEN_LONG,           // long
+    TOKEN_SHORT,          // short
+    TOKEN_UNSIGNED,       // unsigned
+    TOKEN_SIGNED,         // signed
+    TOKEN_SIZEOF,         // sizeof operator
+
+    // ARC-specific keywords
+    TOKEN_BRIDGE,           // __bridge
+    TOKEN_BRIDGE_RETAINED,  // __bridge_retained
+    TOKEN_BRIDGE_TRANSFER  // __bridge_transfer
 
 } TokenType;
 
@@ -210,6 +221,22 @@ typedef enum {
     TYPE_DOUBLE,
     TYPE_CHAR,
     TYPE_BOOL,
+    // New complex types
+    TYPE_LONG,              // long int
+    TYPE_LONG_LONG,         // long long int
+    TYPE_UNSIGNED_INT,      // unsigned int
+    TYPE_UNSIGNED_LONG,     // unsigned long
+    TYPE_SHORT,             // short int
+    TYPE_UNSIGNED_SHORT,    // unsigned short
+    TYPE_SIGNED_CHAR,       // signed char
+    TYPE_UNSIGNED_CHAR,     // unsigned char
+    TYPE_LONG_DOUBLE,       // long double
+
+    // Function pointer type
+    TYPE_FUNCTION_POINTER,  // Function pointer type
+
+    // String types
+    TYPE_STRING,            // char[] or char*
     TYPE_ID,              // Objective-C id type
     TYPE_CLASS,           // Objective-C Class type
     TYPE_SEL,             // Objective-C SEL type
@@ -226,6 +253,8 @@ typedef enum {
  *
  * Enumeration of all AST node types, including C and Objective-C constructs.
  */
+// Replace your ASTNodeType enum in types.h with this updated version:
+
 typedef enum {
     // C Declarations
     AST_FUNCTION_DECLARATION,
@@ -273,17 +302,17 @@ typedef enum {
     AST_NUMBER_LITERAL,
     AST_STRING_LITERAL,
     AST_CHAR_LITERAL,
-    AST_MEMBER_ACCESS,    // . and -> operators
-    AST_ARRAY_ACCESS,     // [] operator - ONLY DEFINED ONCE
-    AST_TERNARY_OP,       // ? : operator
+    AST_MEMBER_ACCESS,
+    AST_ARRAY_ACCESS,
+    AST_TERNARY_OP,
 
     // Objective-C Expressions
     AST_OBJC_MESSAGE_SEND,
-    AST_OBJC_STRING_LITERAL,  // @"string"
-    AST_OBJC_SELECTOR_EXPR,   // @selector()
-    AST_OBJC_PROTOCOL_EXPR,   // @protocol()
-    AST_OBJC_ENCODE_EXPR,     // @encode()
-    AST_OBJC_BOOLEAN_LITERAL, // YES/NO
+    AST_OBJC_STRING_LITERAL,
+    AST_OBJC_SELECTOR_EXPR,
+    AST_OBJC_PROTOCOL_EXPR,
+    AST_OBJC_ENCODE_EXPR,
+    AST_OBJC_BOOLEAN_LITERAL,
 
     // Complex type definitions
     AST_TYPEDEF,
@@ -300,6 +329,15 @@ typedef enum {
     AST_ARRAY_LITERAL,
     AST_POINTER_DEREFERENCE,
     AST_ADDRESS_OF,
+
+    // NEW: Complex types - ADD THESE
+    AST_FUNCTION_POINTER,
+    AST_SIZEOF_EXPR,
+    AST_CAST_EXPR,
+    AST_FLOAT_LITERAL,
+    AST_DOUBLE_LITERAL,
+    AST_LONG_LITERAL,
+    AST_ULONG_LITERAL,
 
     // Special
     AST_PROGRAM
@@ -355,6 +393,34 @@ typedef struct ObjCMethodParam {
     char *param_name;        // Parameter name
 } ObjCMethodParam;
 
+// Add ARC ownership qualifiers
+typedef enum {
+    ARC_QUALIFIER_NONE = 0,
+    ARC_QUALIFIER_STRONG,           // Default for object types
+    ARC_QUALIFIER_WEAK,             // Zeroing weak reference
+    ARC_QUALIFIER_UNSAFE_UNRETAINED, // Non-zeroing weak reference
+    ARC_QUALIFIER_AUTORELEASING     // Used for out parameters
+} ARCQualifier;
+
+// ARC bridge casting types
+typedef enum {
+    ARC_BRIDGE_NONE = 0,
+    ARC_BRIDGE,                     // __bridge
+    ARC_BRIDGE_RETAINED,            // __bridge_retained (CF to ObjC)
+    ARC_BRIDGE_TRANSFER             // __bridge_transfer (ObjC to CF)
+} ARCBridgeCast;
+
+// ARC memory management metadata
+typedef struct {
+    ARCQualifier qualifier;
+    bool is_objc_object;            // Is this an ObjC object type?
+    bool needs_retain;              // Should retain on assignment
+    bool needs_release;             // Should release on scope exit
+    bool is_parameter;              // Is this a function/method parameter?
+    bool is_return_value;           // Is this a return value?
+    int retain_count;               // Track retain count (for analysis)
+} ARCInfo;
+
 // Array-specific AST node structures - DEFINED BEFORE ASTNode
 typedef struct {
     ASTNode* element_type;    // Type of array elements
@@ -394,7 +460,39 @@ struct ASTNode {
     int line;
     int column;
 
+    // Add ARC metadata
+    ARCInfo arc_info;
+
+
+
     union {
+
+        // Enhanced variable declaration with ARC
+        struct {
+            DataType var_type;
+            char *name;
+            struct ASTNode *initializer;
+            struct ASTNode *type_node;
+            ARCQualifier arc_qualifier;  // Ownership qualifier
+        } var_decl_arc;
+
+        // ARC-aware assignment
+        struct {
+            char *variable;
+            struct ASTNode *value;
+            bool needs_retain;           // Insert retain call
+            bool needs_release;          // Insert release call
+            ARCQualifier source_qualifier;
+            ARCQualifier dest_qualifier;
+        } assignment_arc;
+
+        // ARC bridge cast
+        struct {
+            ARCBridgeCast bridge_type;
+            struct ASTNode *operand;
+            DataType target_type;
+        } bridge_cast;
+
         struct {
             struct ASTNode **declarations;
             int declaration_count;
@@ -412,7 +510,7 @@ struct ASTNode {
             DataType var_type;
             char *name;
             struct ASTNode *initializer;
-            struct ASTNode *type_node;  // Add this field for complex types
+            struct ASTNode *type_node;
         } var_decl;
 
         struct {
@@ -489,36 +587,36 @@ struct ASTNode {
         struct {
             char *class_name;
             char *superclass_name;
-            struct ASTNode **protocols;     // Adopted protocols
+            struct ASTNode **protocols;
             int protocol_count;
-            struct ASTNode **methods;       // Method declarations
+            struct ASTNode **methods;
             int method_count;
-            struct ASTNode **properties;   // Property declarations
+            struct ASTNode **properties;
             int property_count;
         } objc_interface;
 
         struct {
             char *class_name;
-            char *category_name;            // NULL if not a category
-            struct ASTNode **methods;       // Method implementations
+            char *category_name;
+            struct ASTNode **methods;
             int method_count;
-            struct ASTNode **ivars;         // Instance variables
+            struct ASTNode **ivars;
             int ivar_count;
         } objc_implementation;
 
         struct {
-            ObjCMethodType method_type;     // + or -
+            ObjCMethodType method_type;
             DataType return_type;
-            char *selector;                 // Full selector string
-            ObjCMethodParam *params;        // Method parameters
+            char *selector;
+            ObjCMethodParam *params;
             int param_count;
-            struct ASTNode *body;           // Method body (NULL for declarations)
+            struct ASTNode *body;
         } objc_method;
 
         struct {
-            struct ASTNode *receiver;       // Object receiving the message
-            char *selector;                 // Method selector
-            struct ASTNode **arguments;     // Arguments
+            struct ASTNode *receiver;
+            char *selector;
+            struct ASTNode **arguments;
             int argument_count;
         } objc_message;
 
@@ -526,28 +624,28 @@ struct ASTNode {
             DataType property_type;
             char *property_name;
             ObjCPropertyAttributes attributes;
-            char *getter_name;              // Custom getter name (optional)
-            char *setter_name;              // Custom setter name (optional)
+            char *getter_name;
+            char *setter_name;
         } objc_property;
 
         struct {
             char *protocol_name;
-            struct ASTNode **methods;       // Required/optional methods
+            struct ASTNode **methods;
             int method_count;
-            struct ASTNode **properties;   // Protocol properties
+            struct ASTNode **properties;
             int property_count;
         } objc_protocol;
 
         struct {
-            char *value;                    // @"string content"
+            char *value;
         } objc_string;
 
         struct {
-            char *selector_name;            // @selector(methodName:)
+            char *selector_name;
         } objc_selector;
 
         struct {
-            bool value;                     // YES or NO
+            bool value;
         } objc_boolean;
 
         // Complex type definitions
@@ -597,7 +695,45 @@ struct ASTNode {
         AddressOf address_of;
         PointerDereference pointer_deref;
 
-    } data;  // This closes the union - ONLY ONE data union
+        // NEW: Complex type structures - ADD THESE
+        struct {
+            DataType return_type;
+            char *name;
+            struct ASTNode **param_types;
+            int param_count;
+            bool is_variadic;
+        } function_ptr;
+
+        struct {
+            struct ASTNode *operand;
+        } sizeof_expr;
+
+        struct {
+            DataType target_type;
+            struct ASTNode *operand;
+        } cast_expr;
+
+        struct {
+            char value;
+        } char_literal;
+
+        struct {
+            float value;
+        } float_literal;
+
+        struct {
+            double value;
+        } double_literal;
+
+        struct {
+            long value;
+        } long_literal;
+
+        struct {
+            unsigned long value;
+        } ulong_literal;
+
+    } data;  // This closes the union
 };
 
 /**
@@ -715,6 +851,17 @@ typedef struct IncludeFile {
     int line;
     int pos;
 } IncludeFile;
+
+// ARC context for tracking scope and cleanup
+typedef struct ARCContext {
+    SymbolTable* symbol_table;
+    ASTNode** cleanup_vars;      // Variables needing cleanup on scope exit
+    int cleanup_count;
+    int cleanup_capacity;
+    ASTNode** weak_refs;         // Weak references for zeroing
+    int weak_ref_count;
+    int scope_depth;
+} ARCContext;
 
 // Forward declaration only - full definition in preprocessor.h
 typedef struct Preprocessor Preprocessor;

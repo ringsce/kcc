@@ -44,4 +44,16 @@ void codegen_pointer_dereference(CodeGenerator *codegen, ASTNode *node);
 void codegen_generate_array_runtime_includes(CodeGenerator *codegen);
 void codegen_generate_with_arrays(CodeGenerator *codegen, ASTNode *ast);
 
+// Add these to codegen.h (before any existing declarations)
+void codegen_generate_type_declaration(CodeGenerator* codegen, DataType type);
+void codegen_function_pointer(CodeGenerator* codegen, ASTNode* node);
+void codegen_sizeof_expr(CodeGenerator* codegen, ASTNode* node);
+void codegen_cast_expr(CodeGenerator* codegen, ASTNode* node);
+void codegen_char_literal(CodeGenerator* codegen, ASTNode* node);
+void codegen_float_literal(CodeGenerator* codegen, ASTNode* node);
+void codegen_double_literal(CodeGenerator* codegen, ASTNode* node);
+void codegen_long_literal(CodeGenerator* codegen, ASTNode* node);
+void codegen_ulong_literal(CodeGenerator* codegen, ASTNode* node);
+
+
 #endif // CODEGEN_H

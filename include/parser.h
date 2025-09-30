@@ -153,6 +153,17 @@ void ast_add_objc_interface_member(ASTNode *interface, ASTNode *member);
 void ast_add_objc_implementation_member(ASTNode *implementation, ASTNode *member);
 void ast_add_objc_protocol_method(ASTNode *protocol, ASTNode *method);
 void ast_add_objc_protocol_property(ASTNode *protocol, ASTNode *property);
+
+/* ============================================
+ * STEP 1: Add these helper function declarations to parser.h
+ * ============================================ */
+
+// Add these to parser.h
+bool is_objc_object_type(DataType type);
+ARCQualifier parser_parse_arc_qualifier(Parser* parser);
+ASTNode* parser_parse_arc_variable_declaration(Parser* parser);
+ASTNode* parser_parse_arc_bridge_cast(Parser* parser);
+
 void ast_destroy(ASTNode *node);
 
 #endif // PARSER_H

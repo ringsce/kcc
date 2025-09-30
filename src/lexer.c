@@ -354,6 +354,15 @@ const char *token_type_to_string(TokenType type) {
         case TOKEN_GREATER_EQUAL: return "GREATER_EQUAL";
         case TOKEN_NOT_EQUAL: return "NOT_EQUAL";
         case TOKEN_MODULO: return "MODULO";
+        case TOKEN_BRIDGE: return "BRIDGE";
+        case TOKEN_BRIDGE_RETAINED: return "BRIDGE_RETAINED";
+        case TOKEN_BRIDGE_TRANSFER: return "BRIDGE_TRANSFER";
+        case TOKEN_LONG: return "LONG";
+        case TOKEN_SHORT: return "SHORT";
+        case TOKEN_UNSIGNED: return "UNSIGNED";
+        case TOKEN_SIGNED: return "SIGNED";
+        case TOKEN_SIZEOF: return "SIZEOF";
         default: return "UNKNOWN";
     }
 }
+
