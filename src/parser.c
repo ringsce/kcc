@@ -266,6 +266,8 @@ ASTNode *parser_parse_objc_interface(Parser *parser) {
     // Parse optional protocol list <Protocol1, Protocol2>
     ASTNode **protocols = NULL;
     int protocol_count = 0;
+    parser_expect(parser, TOKEN_GREATER);
+    (void)protocols; // Suppress unused warning
     if (parser_match(parser, TOKEN_LESS)) {
         parser_advance(parser);
         // Parse protocol list (simplified)
@@ -564,9 +566,9 @@ ASTNode *parser_parse_objc_synthesize(Parser *parser) {
             }
         }
 
-        // Create synthesize node for this property
-        ASTNode *synthesize = ast_create_objc_synthesize(property_name, ivar_name);
-
+        // Keep this line:
+        ast_destroy(ast_create_objc_synthesize(property_name, ivar_name));
+        
         free(property_name);
         if (ivar_name) free(ivar_name);
 
@@ -770,7 +772,7 @@ ASTNode *parser_parse_objc_message_send(Parser *parser) {
 
             // Parse argument
             ASTNode *arg = parser_parse_expression(parser);
-            // Store argument (implementation depends on AST structure)
+            (void)arg; // TODO: Store argument properly
 
             // Additional selector parts
             if (parser_match(parser, TOKEN_IDENTIFIER)) {
@@ -979,6 +981,7 @@ ASTNode *parser_parse_objc_try_statement(Parser *parser) {
 
         // Create catch block node
         ASTNode *catch_block = ast_create_objc_catch(exception_type, exception_var, catch_body);
+        (void)catch_block; // TODO: Add to catch blocks array
 
         // Add to catch blocks array (simplified - you'd need proper array management)
         catch_count++;
