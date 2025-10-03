@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 46;
+	objectVersion = 54;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -22,31 +22,36 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		068B67BE1DF854DAC4622457 /* symbol_table.c */ = {isa = PBXFileReference; includeInIndex = 1; name = symbol_table.c; path = src/symbol_table.c; sourceTree = "<group>"; };
+		068B67BE1DF854DAC4622457 /* symbol_table.c */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.c; name = symbol_table.c; path = src/symbol_table.c; sourceTree = "<group>"; };
 		0F2390FDBDC07213B14B7107 /* codegen.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = codegen.h; path = include/codegen.h; sourceTree = "<group>"; };
-		27212275B3A4CAD28C5BA453 /* KCC */ = {isa = PBXFileReference; includeInIndex = 0; path = KCC; sourceTree = BUILT_PRODUCTS_DIR; };
+		27212275B3A4CAD28C5BA453 /* KCC */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = KCC; sourceTree = BUILT_PRODUCTS_DIR; };
 		2AB4070D4AD53FC0043F7513 /* parser.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = parser.h; path = include/parser.h; sourceTree = "<group>"; };
-		32A45A6FF7856E0DFE087082 /* codegen.c */ = {isa = PBXFileReference; includeInIndex = 1; name = codegen.c; path = src/codegen.c; sourceTree = "<group>"; };
+		32A45A6FF7856E0DFE087082 /* codegen.c */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.c; name = codegen.c; path = src/codegen.c; sourceTree = "<group>"; };
 		377EC0C053159F18EC865027 /* multiarch_codegen.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = multiarch_codegen.h; path = include/multiarch_codegen.h; sourceTree = "<group>"; };
 		3E72523A4BDECFB084078865 /* preprocessor.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = preprocessor.h; path = include/preprocessor.h; sourceTree = "<group>"; };
 		490C5B448E25CF379694256B /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.0.sdk/System/Library/Frameworks/Cocoa.framework; sourceTree = DEVELOPER_DIR; };
 		4A071DDCDE20DF87C92783C2 /* error.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = error.h; path = include/error.h; sourceTree = "<group>"; };
-		4ACE148872BB2321DF0D94DE /* main.c */ = {isa = PBXFileReference; includeInIndex = 1; name = main.c; path = src/main.c; sourceTree = "<group>"; };
+		4ACE148872BB2321DF0D94DE /* main.c */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.c; name = main.c; path = src/main.c; sourceTree = "<group>"; };
 		4F2FD41B4740F257D985BD8B /* symbol_table.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = symbol_table.h; path = include/symbol_table.h; sourceTree = "<group>"; };
 		4FDF4014F05FFB7AC162B5BC /* array_runtime.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = array_runtime.h; path = include/array_runtime.h; sourceTree = "<group>"; };
-		617B68D7EBDC313FA79C1B95 /* error.c */ = {isa = PBXFileReference; includeInIndex = 1; name = error.c; path = src/error.c; sourceTree = "<group>"; };
-		64F09AE9DD341D330DD43532 /* multiarch_codegen.c */ = {isa = PBXFileReference; includeInIndex = 1; name = multiarch_codegen.c; path = src/multiarch_codegen.c; sourceTree = "<group>"; };
-		665A4D5ED31C6BCDB361A24F /* lexer.c */ = {isa = PBXFileReference; includeInIndex = 1; name = lexer.c; path = src/lexer.c; sourceTree = "<group>"; };
-		67A3B18A7DF48F2192C085E3 /* utils.c */ = {isa = PBXFileReference; includeInIndex = 1; name = utils.c; path = src/utils.c; sourceTree = "<group>"; };
+		617B68D7EBDC313FA79C1B95 /* error.c */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.c; name = error.c; path = src/error.c; sourceTree = "<group>"; };
+		64F09AE9DD341D330DD43532 /* multiarch_codegen.c */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.c; name = multiarch_codegen.c; path = src/multiarch_codegen.c; sourceTree = "<group>"; };
+		665A4D5ED31C6BCDB361A24F /* lexer.c */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.c; name = lexer.c; path = src/lexer.c; sourceTree = "<group>"; };
+		67A3B18A7DF48F2192C085E3 /* utils.c */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.c; name = utils.c; path = src/utils.c; sourceTree = "<group>"; };
 		85EFAB7FCE059595318AB603 /* types.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = types.h; path = include/types.h; sourceTree = "<group>"; };
-		9B5050C946AD8AA872FCD778 /* parser.c */ = {isa = PBXFileReference; includeInIndex = 1; name = parser.c; path = src/parser.c; sourceTree = "<group>"; };
+		9B5050C946AD8AA872FCD778 /* parser.c */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.c; name = parser.c; path = src/parser.c; sourceTree = "<group>"; };
 		9C3D2E22F3AD1C3940A9E005 /* ast.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = ast.h; path = include/ast.h; sourceTree = "<group>"; };
 		A12714005EE41A1E04E260F3 /* kcc.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = kcc.h; path = include/kcc.h; sourceTree = "<group>"; };
 		A748E2774C73C3D41F6D68B0 /* lexer.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = lexer.h; path = include/lexer.h; sourceTree = "<group>"; };
-		B5E364CDA2EE5F14B2064057 /* ast.c */ = {isa = PBXFileReference; includeInIndex = 1; name = ast.c; path = src/ast.c; sourceTree = "<group>"; };
+		B5E364CDA2EE5F14B2064057 /* ast.c */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.c; name = ast.c; path = src/ast.c; sourceTree = "<group>"; };
 		BB8072FE2FA72665225734E4 /* utils.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = utils.h; path = include/utils.h; sourceTree = "<group>"; };
-		DACECAAC5EF6F8804A6E83C9 /* preprocessor.c */ = {isa = PBXFileReference; includeInIndex = 1; name = preprocessor.c; path = src/preprocessor.c; sourceTree = "<group>"; };
-		E914A8291947A0F0F1D17592 /* builtin_macros.c */ = {isa = PBXFileReference; includeInIndex = 1; name = builtin_macros.c; path = src/builtin_macros.c; sourceTree = "<group>"; };
+		DACECAAC5EF6F8804A6E83C9 /* preprocessor.c */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.c; name = preprocessor.c; path = src/preprocessor.c; sourceTree = "<group>"; };
+		E914A8291947A0F0F1D17592 /* builtin_macros.c */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.c; name = builtin_macros.c; path = src/builtin_macros.c; sourceTree = "<group>"; };
+		EB4C009B2E8D6C9800D58F8C /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		EB4C009C2E8D6F3000D58F8C /* License */ = {isa = PBXFileReference; lastKnownFileType = text; path = License; sourceTree = "<group>"; };
+		EB4C009D2E8D6F3D00D58F8C /* CONTRIBUTORS.md */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CONTRIBUTORS.md; sourceTree = "<group>"; };
+		EB4C009E2E8D6F9800D58F8C /* CODE_OF_CONDUCT.md */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CODE_OF_CONDUCT.md; sourceTree = "<group>"; };
+		EB4C009F2E8D7A7400D58F8C /* Doxyfile */ = {isa = PBXFileReference; lastKnownFileType = text; path = Doxyfile; sourceTree = "<group>"; };
 		FBA0291BDF0188D8DC3F1ECF /* common_includes.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = common_includes.h; path = include/common_includes.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -119,6 +124,11 @@
 		CABE67D30C4DA12122FAC2CB = {
 			isa = PBXGroup;
 			children = (
+				EB4C009F2E8D7A7400D58F8C /* Doxyfile */,
+				EB4C009E2E8D6F9800D58F8C /* CODE_OF_CONDUCT.md */,
+				EB4C009D2E8D6F3D00D58F8C /* CONTRIBUTORS.md */,
+				EB4C009C2E8D6F3000D58F8C /* License */,
+				EB4C009B2E8D6C9800D58F8C /* README.md */,
 				D8726B8445FB3CBD98E7408D /* Products */,
 				8E75F1B08A3F132722C54EE5 /* Frameworks */,
 				59E765E0C8F923B7141A9E87 /* Sources */,
@@ -159,8 +169,9 @@
 		6682F62CA23288E9607A6C2F /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
+				BuildIndependentTargetsInParallel = YES;
 				LastSwiftUpdateCheck = 1600;
-				LastUpgradeCheck = 1600;
+				LastUpgradeCheck = 2600;
 			};
 			buildConfigurationList = DFE59C378CB0FBF7E9E247E2 /* Build configuration list for PBXProject "KCC" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -171,8 +182,6 @@
 				Base,
 			);
 			mainGroup = CABE67D30C4DA12122FAC2CB;
-			minimizedProjectReferenceProxies = 0;
-			preferredProjectObjectVersion = 77;
 			productRefGroup = D8726B8445FB3CBD98E7408D /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -238,9 +247,11 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -259,6 +270,7 @@
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
@@ -268,9 +280,18 @@
 		7414FDE0CEECC345EFBD72BC /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Development";
+				DEAD_CODE_STRIPPING = YES;
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = XJX8PUCD89;
+				"DEVELOPMENT_TEAM[sdk=macosx*]" = XJX8PUCD89;
 				HEADER_SEARCH_PATHS = "$(SRCROOT)/include";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
+				MACOSX_DEPLOYMENT_TARGET = 15.6;
 				PRODUCT_NAME = KCC;
 				SDKROOT = macosx;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SUPPORTS_MACCATALYST = NO;
+				TARGETED_DEVICE_FAMILY = 2;
 			};
 			name = Release;
 		};
@@ -308,9 +329,11 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -322,6 +345,7 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 5.0;
@@ -331,9 +355,18 @@
 		E345937FFA4CA55B37F90079 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Development";
+				DEAD_CODE_STRIPPING = YES;
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = XJX8PUCD89;
+				"DEVELOPMENT_TEAM[sdk=macosx*]" = XJX8PUCD89;
 				HEADER_SEARCH_PATHS = "$(SRCROOT)/include";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
+				MACOSX_DEPLOYMENT_TARGET = 15.6;
 				PRODUCT_NAME = KCC;
 				SDKROOT = macosx;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SUPPORTS_MACCATALYST = NO;
+				TARGETED_DEVICE_FAMILY = 2;
 			};
 			name = Debug;
 		};
