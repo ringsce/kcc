@@ -362,6 +362,9 @@ const char *token_type_to_string(TokenType type) {
         case TOKEN_UNSIGNED: return "UNSIGNED";
         case TOKEN_SIGNED: return "SIGNED";
         case TOKEN_SIZEOF: return "SIZEOF";
+        case TOKEN_SWITCH: return "switch";
+        case TOKEN_CASE: return "case";
+        case TOKEN_DEFAULT: return "default";
         default: return "UNKNOWN";
     }
 }

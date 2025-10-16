@@ -154,6 +154,8 @@ void ast_add_objc_implementation_member(ASTNode *implementation, ASTNode *member
 void ast_add_objc_protocol_method(ASTNode *protocol, ASTNode *method);
 void ast_add_objc_protocol_property(ASTNode *protocol, ASTNode *property);
 
+ASTNode *parser_parse_switch_statement(Parser *parser);
+
 /* ============================================
  * STEP 1: Add these helper function declarations to parser.h
  * ============================================ */

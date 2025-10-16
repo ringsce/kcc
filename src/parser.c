@@ -1766,3 +1766,51 @@ ASTNode *parser_parse_unary_expression_with_pointers(Parser *parser) {
     return parser_parse_unary_expression(parser);
 }
 
+ASTNode *parser_parse_switch_statement(Parser *parser) {
+    parser_advance(parser); // consume 'switch'
+
+    parser_expect(parser, TOKEN_LPAREN);
+    ASTNode *expression = parser_parse_expression(parser);
+    parser_expect(parser, TOKEN_RPAREN);
+
+    ASTNode *switch_stmt = ast_create_switch_stmt(expression);
+
+    parser_expect(parser, TOKEN_LBRACE);
+
+    ASTNode *current_case = NULL;
+
+    while (!parser_match(parser, TOKEN_RBRACE) && !parser_match(parser, TOKEN_EOF)) {
+        if (parser_match(parser, TOKEN_CASE)) {
+            parser_advance(parser);
+            ASTNode *case_value = parser_parse_expression(parser);
+            parser_expect(parser, TOKEN_COLON);
+
+            current_case = ast_create_case_stmt(case_value, false);
+            ast_add_case_to_switch(switch_stmt, current_case);
+
+        } else if (parser_match(parser, TOKEN_DEFAULT)) {
+            parser_advance(parser);
+            parser_expect(parser, TOKEN_COLON);
+
+            current_case = ast_create_case_stmt(NULL, true);
+            ast_add_case_to_switch(switch_stmt, current_case);
+
+        } else if (current_case) {
+            // Parse statement for current case
+            ASTNode *stmt = parser_parse_statement(parser);
+            if (stmt) {
+                ast_add_statement_to_case(current_case, stmt);
+            }
+        } else {
+            error_syntax(parser->current_token.line, parser->current_token.column,
+                        "Statement before any case label");
+            parser_advance(parser);
+        }
+    }
+
+    parser_expect(parser, TOKEN_RBRACE);
+
+    return switch_stmt;
+}
+
+

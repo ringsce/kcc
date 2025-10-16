@@ -208,4 +208,6 @@ void multiarch_codegen_return_stmt(MultiArchCodegen *codegen, struct ASTNode *no
 void multiarch_codegen_if_stmt(MultiArchCodegen *codegen, struct ASTNode *node);
 void multiarch_codegen_while_stmt(MultiArchCodegen *codegen, struct ASTNode *node);
 
+
+void multiarch_codegen_switch_stmt(MultiArchCodegen *codegen, struct ASTNode *node);
 #endif // MULTIARCH_CODEGEN_H

@@ -1139,3 +1139,50 @@ ASTNode* ast_create_arc_var_decl(DataType type, const char* name,
 
     return node;
 }
+
+ASTNode *ast_create_switch_stmt(ASTNode *expression) {
+    ASTNode *node = malloc(sizeof(ASTNode));
+    if (!node) return NULL;
+
+    node->type = AST_SWITCH_STATEMENT;
+    node->data.switch_stmt.expression = expression;
+    node->data.switch_stmt.cases = NULL;
+    node->data.switch_stmt.case_count = 0;
+
+    return node;
+}
+
+ASTNode *ast_create_case_stmt(ASTNode *value, bool is_default) {
+    ASTNode *node = malloc(sizeof(ASTNode));
+    if (!node) return NULL;
+
+    node->type = AST_CASE_STATEMENT;
+    node->data.case_stmt.value = value;
+    node->data.case_stmt.is_default = is_default;
+    node->data.case_stmt.statements = NULL;
+    node->data.case_stmt.statement_count = 0;
+
+    return node;
+}
+
+void ast_add_case_to_switch(ASTNode *switch_node, ASTNode *case_node) {
+    if (!switch_node || !case_node) return;
+
+    switch_node->data.switch_stmt.case_count++;
+    switch_node->data.switch_stmt.cases = realloc(
+        switch_node->data.switch_stmt.cases,
+        sizeof(ASTNode*) * switch_node->data.switch_stmt.case_count
+    );
+    switch_node->data.switch_stmt.cases[switch_node->data.switch_stmt.case_count - 1] = case_node;
+}
+
+void ast_add_statement_to_case(ASTNode *case_node, ASTNode *stmt) {
+    if (!case_node || !stmt) return;
+
+    case_node->data.case_stmt.statement_count++;
+    case_node->data.case_stmt.statements = realloc(
+        case_node->data.case_stmt.statements,
+        sizeof(ASTNode*) * case_node->data.case_stmt.statement_count
+    );
+    case_node->data.case_stmt.statements[case_node->data.case_stmt.statement_count - 1] = stmt;
+}

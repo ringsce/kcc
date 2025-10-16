@@ -98,6 +98,11 @@ ASTNode* ast_create_long_literal(long value);
 // Add enhanced type checking
 bool parser_is_type_specifier_extended(TokenType type);
 
+ASTNode *ast_create_switch_stmt(ASTNode *expression);
+ASTNode *ast_create_case_stmt(ASTNode *value, bool is_default);
+void ast_add_case_to_switch(ASTNode *switch_node, ASTNode *case_node);
+void ast_add_statement_to_case(ASTNode *case_node, ASTNode *stmt);
+
 // Add these to ast.h
 ASTNode* ast_create_arc_var_decl(DataType type, const char* name,
                                  ASTNode* initializer, ARCQualifier qualifier);

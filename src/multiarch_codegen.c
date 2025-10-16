@@ -1038,5 +1038,87 @@ void multiarch_stack_dealloc(MultiArchCodegen *codegen, int bytes) {
             break;
         default:
             break;
+}
+
+
+}
+void multiarch_codegen_switch_stmt(MultiArchCodegen *codegen, struct ASTNode *node) {
+    if (node->type != AST_SWITCH_STATEMENT) return;
+
+    // Generate switch expression
+    multiarch_codegen_expression(codegen, node->data.switch_stmt.expression);
+    const char *switch_reg = multiarch_get_return_reg(codegen);
+
+    // Create labels
+    char *end_label = multiarch_new_label(codegen);
+    char **case_labels = malloc(sizeof(char*) * node->data.switch_stmt.case_count);
+
+    // Generate labels for each case
+    for (int i = 0; i < node->data.switch_stmt.case_count; i++) {
+        case_labels[i] = multiarch_new_label(codegen);
     }
+
+    // Generate comparison code for each case
+    for (int i = 0; i < node->data.switch_stmt.case_count; i++) {
+        ASTNode *case_node = node->data.switch_stmt.cases[i];
+
+        if (!case_node->data.case_stmt.is_default) {
+            // Compare switch value with case value
+            multiarch_codegen_expression(codegen, case_node->data.case_stmt.value);
+            const char *case_reg = multiarch_get_temp_reg(codegen, 1);
+
+            switch (codegen->target->arch) {
+                case ARCH_X86_64:
+                    multiarch_emit(codegen, "    movq %%%s, %%%s",
+                                 multiarch_get_return_reg(codegen), case_reg);
+                    multiarch_emit(codegen, "    cmpq %%%s, %%%s", case_reg, switch_reg);
+                    break;
+                case ARCH_ARM64:
+                    multiarch_emit(codegen, "    mov %s, %s",
+                                 case_reg, multiarch_get_return_reg(codegen));
+                    multiarch_emit(codegen, "    cmp %s, %s", switch_reg, case_reg);
+                    break;
+                default:
+                    break;
+            }
+
+            multiarch_jump_if_equal(codegen, case_labels[i]);
+        }
+    }
+
+    // Jump to default case if present, otherwise jump to end
+    int default_index = -1;
+    for (int i = 0; i < node->data.switch_stmt.case_count; i++) {
+        if (node->data.switch_stmt.cases[i]->data.case_stmt.is_default) {
+            default_index = i;
+            break;
+        }
+    }
+
+    if (default_index >= 0) {
+        multiarch_jump(codegen, case_labels[default_index]);
+    } else {
+        multiarch_jump(codegen, end_label);
+    }
+
+    // Generate code for each case
+    for (int i = 0; i < node->data.switch_stmt.case_count; i++) {
+        ASTNode *case_node = node->data.switch_stmt.cases[i];
+
+        multiarch_emit_label(codegen, case_labels[i]);
+
+        // Generate statements for this case
+        for (int j = 0; j < case_node->data.case_stmt.statement_count; j++) {
+            multiarch_codegen_statement(codegen, case_node->data.case_stmt.statements[j]);
+        }
+    }
+
+    multiarch_emit_label(codegen, end_label);
+
+    // Clean up
+    for (int i = 0; i < node->data.switch_stmt.case_count; i++) {
+        free(case_labels[i]);
+    }
+    free(case_labels);
+    free(end_label);
 }

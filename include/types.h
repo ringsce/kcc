@@ -53,6 +53,9 @@ typedef enum {
     TOKEN_STATIC,         // Add static support
     TOKEN_EXTERN,         // Add extern support
     TOKEN_CONST,          // Add const support
+    TOKEN_SWITCH,        // ADD THIS
+    TOKEN_CASE,          // ADD THIS
+    TOKEN_DEFAULT,       // ADD THIS
 
     // Objective-C Keywords and Directives
     TOKEN_AT,             // @
@@ -338,6 +341,11 @@ typedef enum {
     AST_DOUBLE_LITERAL,
     AST_LONG_LITERAL,
     AST_ULONG_LITERAL,
+
+    // In the statements section
+    AST_SWITCH_STATEMENT,
+    AST_CASE_STATEMENT,
+    AST_DEFAULT_STATEMENT,
 
     // Special
     AST_PROGRAM
@@ -732,6 +740,21 @@ struct ASTNode {
         struct {
             unsigned long value;
         } ulong_literal;
+
+        // Switch statement
+        struct {
+            struct ASTNode *expression;      // Switch expression
+            struct ASTNode **cases;          // Array of case/default statements
+            int case_count;                  // Number of cases
+        } switch_stmt;
+
+        // Case statement
+        struct {
+            struct ASTNode *value;           // Case value (NULL for default)
+            struct ASTNode **statements;     // Statements in this case
+            int statement_count;             // Number of statements
+            bool is_default;                 // Is this a default case?
+        } case_stmt;
 
     } data;  // This closes the union
 };
