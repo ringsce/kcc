@@ -1,5 +1,5 @@
-# This workflow is for a CMake project running on multiple platforms.
-name: CMake on multiple platforms
+# This workflow is for a CMake project running on a single platform (macOS ARM64).
+name: CMake on macOS
 
 on:
   push:
@@ -9,22 +9,13 @@ on:
 
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
+    runs-on: macos-latest # This runner defaults to ARM64
 
     strategy:
-      # Set fail-fast to false to ensure that feedback is delivered for all matrix combinations.
       fail-fast: false
-
-      # Set up a matrix to explicitly run the 3 required configurations:
-      # 1. <Linux, Release, GCC>
-      # 2. <Linux, Release, Clang>
-      # 3. <macOS, Release, Clang (ARM64)>
       matrix:
+        # Set up a matrix to explicitly run only the macOS ARM64 configuration
         include:
-          - os: ubuntu-latest
-            c_compiler: gcc
-          - os: ubuntu-latest
-            c_compiler: clang
           - os: macos-latest
             c_compiler: clang
 
