@@ -15,30 +15,18 @@ jobs:
       # Set fail-fast to false to ensure that feedback is delivered for all matrix combinations.
       fail-fast: false
 
-      # Set up a matrix to run the following 3 configurations:
-      # 1. <Linux, Release, latest GCC compiler toolchain on the default runner image>
-      # 2. <Linux, Release, latest Clang compiler toolchain on the default runner image>
-      # 3. <macOS, Release, latest Clang compiler toolchain (ARM64) on the default runner image>
-      #
-      # To add more build types (Release, Debug, RelWithDebInfo, etc.) customize the build_type list.
+      # Set up a matrix to explicitly run the 3 required configurations:
+      # 1. <Linux, Release, GCC>
+      # 2. <Linux, Release, Clang>
+      # 3. <macOS, Release, Clang (ARM64)>
       matrix:
-        os: [ubuntu-latest, macos-latest]
-        build_type: [Release]
-        c_compiler: [gcc, clang]
         include:
           - os: ubuntu-latest
             c_compiler: gcc
-            cpp_compiler: g++
           - os: ubuntu-latest
             c_compiler: clang
-            cpp_compiler: clang++
           - os: macos-latest
             c_compiler: clang
-            cpp_compiler: clang++
-        exclude:
-          # Exclude GCC on macOS to standardize on Clang
-          - os: macos-latest
-            c_compiler: gcc
 
     steps:
     - uses: actions/checkout@v4
@@ -51,21 +39,19 @@ jobs:
         echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
 
     - name: Configure CMake
-      # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
+      # Configure CMake in a 'build' subdirectory.
+      # We set the C compiler from the matrix and hardcode the Build Type as Release.
       run: >
         cmake -B ${{ steps.strings.outputs.build-output-dir }}
-        -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
         -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
-        -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+        -DCMAKE_BUILD_TYPE=Release
         -S ${{ github.workspace }}
 
     - name: Build
-      # Build your program with the given configuration.
-      # --config is technically not needed for single-config generators (like Makefiles on Linux/macOS)
-      # but is harmless and ensures compatibility if the generator changes.
-      run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ matrix.build_type }}
+      # Build your program with the Release configuration.
+      run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config Release
 
     - name: Test
       working-directory: ${{ steps.strings.outputs.build-output-dir }}
       # Execute tests defined by the CMake configuration.
-      run: ctest --build-config ${{ matrix.build_type }}
+      run: ctest --build-config Release
