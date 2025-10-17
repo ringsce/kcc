@@ -46,3 +46,12 @@ jobs:
       working-directory: ${{ steps.strings.outputs.build-output-dir }}
       # Execute tests defined by the CMake configuration.
       run: ctest --build-config Release
+
+    - name: Upload macOS Artifact
+      # This step zips and uploads the compiled 'kcc' executable
+      uses: actions/upload-artifact@v4
+      with:
+        # This will be the name of the downloadable .zip file
+        name: kcc-macos-arm64
+        # This is the path to the 'kcc' executable inside the build directory
+        path: ${{ steps.strings.outputs.build-output-dir }}/kcc
