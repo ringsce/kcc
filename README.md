@@ -239,9 +239,10 @@ kcc/
 * [x] Complete arrays and pointers.
 * [x] Full support for `struct`, `union`, `enum`, and `typedef`.
 * [x] Full support for numeric types, function pointers, `sizeof`, and casting.
-* [ ] Implement `switch` statements.
-* [ ] Add support for `const` and `volatile` qualifiers.
+* [x] Implement `switch` statements.
+* [x] Add support for `const` and `volatile` qualifiers.
 * [ ] Add support for `static` and `extern` storage classes.
+* [ ] Add support for `semantic`
 
 ### In Progress (Objective-C)
 

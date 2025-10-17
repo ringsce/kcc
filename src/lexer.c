@@ -365,6 +365,9 @@ const char *token_type_to_string(TokenType type) {
         case TOKEN_SWITCH: return "switch";
         case TOKEN_CASE: return "case";
         case TOKEN_DEFAULT: return "default";
+        case TOKEN_CONST: return "const";
+        case TOKEN_VOLATILE: return "volatile";
+        case TOKEN_RESTRICT: return "restrict";
         default: return "UNKNOWN";
     }
 }

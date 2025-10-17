@@ -181,6 +181,9 @@ ASTNode *parser_parse_program(Parser *parser) {
 }
 
 ASTNode *parser_parse_declaration(Parser *parser) {
+    // Parse type qualifiers first
+    TypeQualifier qualifiers = parser_parse_type_qualifiers(parser);
+
     // Parse type specifier (int, char, etc.)
     if (!parser_is_type_specifier(parser->current_token.type)) {
         return NULL;
@@ -189,6 +192,10 @@ ASTNode *parser_parse_declaration(Parser *parser) {
     TokenType type_token = parser->current_token.type;
     DataType data_type = token_type_to_data_type(type_token);
     parser_advance(parser);
+
+    // Parse qualifiers after type too (for "int const x" style)
+    TypeQualifier post_qualifiers = parser_parse_type_qualifiers(parser);
+    qualifiers |= post_qualifiers;
 
     // Parse identifier
     if (parser->current_token.type != TOKEN_IDENTIFIER) {
@@ -207,7 +214,23 @@ ASTNode *parser_parse_declaration(Parser *parser) {
     } else if (parser->current_token.type == TOKEN_SEMICOLON) {
         // This is a variable declaration
         parser_advance(parser); // consume semicolon
-        ASTNode *result = parser_create_variable_declaration(data_type, name);
+        ASTNode *result = parser_create_variable_declaration_with_qualifiers(
+            data_type, name, qualifiers
+        );
+        free(name);
+        return result;
+    } else if (parser->current_token.type == TOKEN_ASSIGN) {
+        // Variable declaration with initialization
+        parser_advance(parser);
+        ASTNode *initializer = parser_parse_expression(parser);
+        parser_expect(parser, TOKEN_SEMICOLON);
+
+        ASTNode *result = parser_create_variable_declaration_with_qualifiers(
+            data_type, name, qualifiers
+        );
+        if (result) {
+            result->data.var_decl.initializer = initializer;
+        }
         free(name);
         return result;
     } else {
@@ -217,6 +240,18 @@ ASTNode *parser_parse_declaration(Parser *parser) {
     }
 }
 
+// Helper function to create variable declaration with qualifiers
+ASTNode *parser_create_variable_declaration_with_qualifiers(
+    DataType type, const char *name, TypeQualifier qualifiers) {
+
+    ASTNode *node = ast_create_var_decl(type, name, NULL);
+    if (node) {
+        node->data.var_decl.qualifiers = qualifiers;
+        node->data.var_decl.is_const = (qualifiers & QUAL_CONST) != 0;
+        node->data.var_decl.is_volatile = (qualifiers & QUAL_VOLATILE) != 0;
+    }
+    return node;
+}
 // Objective-C parsing functions
 ASTNode *parser_parse_objc_declaration(Parser *parser) {
     switch (parser->current_token.type) {
@@ -1040,9 +1075,19 @@ ASTNode *parser_parse_compound_statement(Parser *parser) {
     while (!parser_match(parser, TOKEN_RBRACE) && !parser_match(parser, TOKEN_EOF)) {
         ASTNode *stmt = NULL;
 
-        if (parser_is_type_specifier(parser->current_token.type)) {
-            // Variable declaration
+        // Check for type qualifiers first
+        if (parser_is_type_qualifier(parser->current_token.type) ||
+            parser_is_type_specifier(parser->current_token.type)) {
+
+            // Parse qualifiers
+            TypeQualifier qualifiers = parser_parse_type_qualifiers(parser);
+
+            // Parse type
             DataType var_type = parser_parse_type_specifier(parser);
+
+            // Parse qualifiers after type
+            TypeQualifier post_qualifiers = parser_parse_type_qualifiers(parser);
+            qualifiers |= post_qualifiers;
 
             if (parser_match(parser, TOKEN_IDENTIFIER)) {
                 char *var_name = strdup(parser->current_token.value);
@@ -1052,14 +1097,17 @@ ASTNode *parser_parse_compound_statement(Parser *parser) {
                 if (var_decl) {
                     free(var_decl->data.var_decl.name);
                     var_decl->data.var_decl.name = var_name;
+                    var_decl->data.var_decl.qualifiers = qualifiers;
+                    var_decl->data.var_decl.is_const = (qualifiers & QUAL_CONST) != 0;
+                    var_decl->data.var_decl.is_volatile = (qualifiers & QUAL_VOLATILE) != 0;
                     stmt = var_decl;
                 } else {
                     free(var_name);
                 }
             }
-        } else {
-            stmt = parser_parse_statement(parser);
-        }
+            } else {
+                stmt = parser_parse_statement(parser);
+            }
 
         if (stmt) {
             ast_add_statement(compound, stmt);
@@ -1070,6 +1118,7 @@ ASTNode *parser_parse_compound_statement(Parser *parser) {
 
     return compound;
 }
+
 
 ASTNode *parser_parse_expression_statement(Parser *parser) {
     ASTNode *expr = parser_parse_expression(parser);
@@ -1344,6 +1393,9 @@ ASTNode *parser_parse_enum(Parser *parser) {
 
 // Parse struct/union members (supports bitfields)
 ASTNode *parser_parse_struct_member(Parser *parser) {
+    // Parse qualifiers
+    TypeQualifier qualifiers = parser_parse_type_qualifiers(parser);
+
     // Parse type
     DataType member_type = TYPE_UNKNOWN;
     ASTNode *type_node = NULL;
@@ -1361,6 +1413,10 @@ ASTNode *parser_parse_struct_member(Parser *parser) {
                     "Expected type specifier in struct member");
         return NULL;
     }
+
+    // Parse qualifiers after type
+    TypeQualifier post_qualifiers = parser_parse_type_qualifiers(parser);
+    qualifiers |= post_qualifiers;
 
     // Parse member name
     if (!parser_match(parser, TOKEN_IDENTIFIER)) {
@@ -1392,6 +1448,9 @@ ASTNode *parser_parse_struct_member(Parser *parser) {
     parser_expect(parser, TOKEN_SEMICOLON);
 
     ASTNode *member = ast_create_struct_member(member_type, member_name, bitfield_width);
+    if (member) {
+        member->data.struct_member.qualifiers = qualifiers;
+    }
     if (type_node) {
         ast_set_member_type_node(member, type_node);
     }
@@ -1812,5 +1871,35 @@ ASTNode *parser_parse_switch_statement(Parser *parser) {
 
     return switch_stmt;
 }
+
+// Parse type qualifiers (const, volatile, restrict)
+TypeQualifier parser_parse_type_qualifiers(Parser *parser) {
+    TypeQualifier qualifiers = QUAL_NONE;
+
+    while (true) {
+        if (parser_match(parser, TOKEN_CONST)) {
+            qualifiers |= QUAL_CONST;
+            parser_advance(parser);
+        } else if (parser_match(parser, TOKEN_VOLATILE)) {
+            qualifiers |= QUAL_VOLATILE;
+            parser_advance(parser);
+        } else if (parser_match(parser, TOKEN_RESTRICT)) {
+            qualifiers |= QUAL_RESTRICT;
+            parser_advance(parser);
+        } else {
+            break;
+        }
+    }
+
+    return qualifiers;
+}
+
+// Check if token is a type qualifier
+bool parser_is_type_qualifier(TokenType type) {
+    return type == TOKEN_CONST ||
+           type == TOKEN_VOLATILE ||
+           type == TOKEN_RESTRICT;
+}
+
 
 

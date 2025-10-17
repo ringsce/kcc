@@ -88,6 +88,7 @@ src/error.c
 src/symbol_table.c
 src/preprocessor.c
 src/utils.c
+#src/semantic.c # working on
 )
 
 # Main executable source files

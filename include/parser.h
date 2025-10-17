@@ -156,6 +156,11 @@ void ast_add_objc_protocol_property(ASTNode *protocol, ASTNode *property);
 
 ASTNode *parser_parse_switch_statement(Parser *parser);
 
+TypeQualifier parser_parse_type_qualifiers(Parser *parser);
+bool parser_is_type_qualifier(TokenType type);
+ASTNode *parser_create_variable_declaration_with_qualifiers(
+    DataType type, const char *name, TypeQualifier qualifiers);
+
 /* ============================================
  * STEP 1: Add these helper function declarations to parser.h
  * ============================================ */

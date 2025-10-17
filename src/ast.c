@@ -59,11 +59,14 @@ ASTNode *ast_create_var_decl(DataType type, const char *name, ASTNode *initializ
     ASTNode *node = malloc(sizeof(ASTNode));
     if (!node) return NULL;
 
-    memset(node, 0, sizeof(ASTNode));
-    node->type = AST_VARIABLE_DECLARATION;
+    node->type = AST_VAR_DECL;
     node->data.var_decl.var_type = type;
     node->data.var_decl.name = strdup(name);
     node->data.var_decl.initializer = initializer;
+    node->data.var_decl.type_node = NULL;
+    node->data.var_decl.qualifiers = QUAL_NONE;  // ADD THIS
+    node->data.var_decl.is_const = false;        // ADD THIS
+    node->data.var_decl.is_volatile = false;     // ADD THIS
 
     return node;
 }
@@ -842,12 +845,12 @@ ASTNode *ast_create_struct_member(DataType type, const char *name, int bitfield_
     ASTNode *node = malloc(sizeof(ASTNode));
     if (!node) return NULL;
 
-    memset(node, 0, sizeof(ASTNode));
     node->type = AST_STRUCT_MEMBER;
     node->data.struct_member.type = type;
     node->data.struct_member.name = strdup(name);
     node->data.struct_member.bitfield_width = bitfield_width;
     node->data.struct_member.type_node = NULL;
+    node->data.struct_member.qualifiers = QUAL_NONE;  // ADD THIS
 
     return node;
 }

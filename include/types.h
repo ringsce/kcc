@@ -205,6 +205,8 @@ typedef enum {
     TOKEN_UNSIGNED,       // unsigned
     TOKEN_SIGNED,         // signed
     TOKEN_SIZEOF,         // sizeof operator
+    TOKEN_VOLATILE,       // volatile
+    TOKEN_RESTRICT,       // restrict (optional, C99)
 
     // ARC-specific keywords
     TOKEN_BRIDGE,           // __bridge
@@ -212,6 +214,14 @@ typedef enum {
     TOKEN_BRIDGE_TRANSFER  // __bridge_transfer
 
 } TokenType;
+
+// Add this enum after DataType enum in types.h (around line 250)
+typedef enum {
+    QUAL_NONE = 0,
+    QUAL_CONST = 1 << 0,      // const qualifier
+    QUAL_VOLATILE = 1 << 1,   // volatile qualifier
+    QUAL_RESTRICT = 1 << 2    // restrict qualifier (C99)
+} TypeQualifier;
 
 /**
  * @brief Data types supported by the compiler
@@ -250,6 +260,33 @@ typedef enum {
     TYPE_TYPEDEF,
     TYPE_ARRAY            // Array types
 } DataType;
+
+// Update your variable declaration structure in the ASTNode union
+struct {
+    DataType var_type;
+    char *name;
+    struct ASTNode *initializer;
+    struct ASTNode *type_node;
+    TypeQualifier qualifiers;  // ADD THIS
+    bool is_const;             // ADD THIS for easy checking
+    bool is_volatile;          // ADD THIS for easy checking
+} var_decl;
+
+// Update parameter structure
+struct {
+    DataType param_type;
+    char *name;
+    TypeQualifier qualifiers;  // ADD THIS
+} parameter;
+
+// Add to struct member
+struct {
+    DataType type;
+    char *name;
+    int bitfield_width;
+    struct ASTNode *type_node;
+    TypeQualifier qualifiers;  // ADD THIS
+} struct_member;
 
 /**
  * @brief AST Node types
@@ -519,6 +556,9 @@ struct ASTNode {
             char *name;
             struct ASTNode *initializer;
             struct ASTNode *type_node;
+            TypeQualifier qualifiers;  // ADD THIS LINE
+            bool is_const;             // ADD THIS LINE
+            bool is_volatile;          // ADD THIS LINE
         } var_decl;
 
         struct {
@@ -690,6 +730,7 @@ struct ASTNode {
             char *name;
             int bitfield_width;
             struct ASTNode *type_node;
+            TypeQualifier qualifiers;  // ADD THIS LINE
         } struct_member;
 
         struct {
