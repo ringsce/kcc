@@ -1,15 +1,20 @@
 # This workflow is for a CMake project running on a single platform (macOS ARM64).
-name: CMake on macOS
+# It builds, tests, and automatically creates a "latest" GitHub Release on every push to main.
+name: CMake on macOS with Release
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main" ] # Triggers on updates to main
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main" ] # Also runs build/test on PRs
 
 jobs:
   build:
     runs-on: macos-latest # This runner defaults to ARM64
+
+    # Add permissions for the GitHub CLI and release action to create/delete releases and tags
+    permissions:
+      contents: write
 
     strategy:
       fail-fast: false
@@ -47,11 +52,42 @@ jobs:
       # Execute tests defined by the CMake configuration.
       run: ctest --build-config Release
 
-    - name: Upload macOS Artifact
-      # This step zips and uploads the compiled 'kcc' executable
+    - name: Upload macOS Artifact (for CI run)
+      # This step is still useful for PRs and internal CI logs
       uses: actions/upload-artifact@v4
       with:
-        # This will be the name of the downloadable .zip file
         name: kcc-macos-arm64
-        # This is the path to the 'kcc' executable inside the build directory
         path: ${{ steps.strings.outputs.build-output-dir }}/kcc
+        
+    # --- New Steps for Automatic Release ---
+
+    - name: Package binary for release
+      # This step only runs on pushes to main, not on Pull Requests
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      shell: bash
+      run: |
+        cd ${{ steps.strings.outputs.build-output-dir }}
+        zip kcc-macos-arm64.zip kcc
+        echo "ASSET_PATH=${{ steps.strings.outputs.build-output-dir }}/kcc-macos-arm64.zip" >> "$GITHUB_ENV"
+
+    - name: Delete existing 'latest' release and tag
+      # This step only runs on pushes to main, not on Pull Requests
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        # Delete the release. This also removes the 'latest' tag from the release list.
+        gh release delete latest --yes || echo "No 'latest' release found to delete."
+        # Delete the underlying git tag
+        git push origin --delete latest || echo "No 'latest' tag found to delete."
+
+    - name: Create new 'latest' release
+      # This step only runs on pushes to main, not on Pull Requests
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: latest # Creates a new tag "latest" pointing to this commit
+        name: Latest Build (macOS ARM64)
+        body: "Automated build from the latest commit on main (${{ github.sha }}). This is a pre-release build."
+        prerelease: true
+        files: ${{ env.ASSET_PATH }} # Upload the zip file we created
