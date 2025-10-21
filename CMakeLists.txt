@@ -88,7 +88,8 @@ src/error.c
 src/symbol_table.c
 src/preprocessor.c
 src/utils.c
-#src/semantic.c # working on
+src/semantic.c # working on
+src/builtins.c
 )
 
 # Main executable source files
@@ -109,6 +110,8 @@ include/symbol_table.h
 include/preprocessor.h
 include/utils.h
 include/array_runtime.h
+stdlib/kcc_stdlib.h
+include/builtins.h
 )
 
 # Create the main executable
@@ -132,6 +135,10 @@ endif()
 
 # Install target
 install(TARGETS kcc DESTINATION bin)
+# Install stdlib headers
+install(FILES stdlib/kcc_stdlib.h
+        DESTINATION include/kcc
+)
 
 # Testing
 enable_testing()

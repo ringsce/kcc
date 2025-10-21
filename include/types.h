@@ -261,33 +261,6 @@ typedef enum {
     TYPE_ARRAY            // Array types
 } DataType;
 
-// Update your variable declaration structure in the ASTNode union
-struct {
-    DataType var_type;
-    char *name;
-    struct ASTNode *initializer;
-    struct ASTNode *type_node;
-    TypeQualifier qualifiers;  // ADD THIS
-    bool is_const;             // ADD THIS for easy checking
-    bool is_volatile;          // ADD THIS for easy checking
-} var_decl;
-
-// Update parameter structure
-struct {
-    DataType param_type;
-    char *name;
-    TypeQualifier qualifiers;  // ADD THIS
-} parameter;
-
-// Add to struct member
-struct {
-    DataType type;
-    char *name;
-    int bitfield_width;
-    struct ASTNode *type_node;
-    TypeQualifier qualifiers;  // ADD THIS
-} struct_member;
-
 /**
  * @brief AST Node types
  *

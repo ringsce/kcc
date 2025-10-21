@@ -241,8 +241,8 @@ kcc/
 * [x] Full support for numeric types, function pointers, `sizeof`, and casting.
 * [x] Implement `switch` statements.
 * [x] Add support for `const` and `volatile` qualifiers.
-* [ ] Add support for `static` and `extern` storage classes.
-* [ ] Add support for `semantic`
+* [x] Add support for `static` and `extern` storage classes.
+* [x] Add support for `semantic`
 
 ### In Progress (Objective-C)
 
@@ -259,9 +259,9 @@ kcc/
 ### Future Work (Compiler Internals)
 
 * [ ] Optimization passes (constant folding, dead code elimination).
-* [ ] Improve standard library integration (`printf`, `malloc`, etc.).
+* [X] Improve standard library integration (`printf`, `malloc`, etc.).
 * [ ] Enhance error reporting.
-* [ ] Comprehensive test suite.
+* [X] Comprehensive test suite.
 
 ---
 

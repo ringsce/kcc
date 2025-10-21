@@ -29,6 +29,10 @@ extern int strcmp(const char *s1, const char *s2);
 #include "preprocessor.h"
 #include "symbol_table.h"
 #include "parser.h"
+#include "builtins.h"
+
+
+
 
 struct Parser *parser = NULL;
 

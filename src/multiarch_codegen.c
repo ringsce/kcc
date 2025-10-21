@@ -1122,3 +1122,51 @@ void multiarch_codegen_switch_stmt(MultiArchCodegen *codegen, struct ASTNode *no
     free(case_labels);
     free(end_label);
 }
+
+void multiarch_codegen_call_expr(MultiArchCodegen *codegen, struct ASTNode *node) {
+    if (node->type != AST_FUNCTION_CALL) return;
+
+    const char *func_name = node->data.call_expr.function_name;
+    int arg_count = node->data.call_expr.argument_count;
+
+    // Check if this is a built-in function
+    bool is_builtin = is_builtin_function(func_name);
+
+    if (is_builtin) {
+        multiarch_emit_comment(codegen, "Call to standard library function");
+        char comment[128];
+        snprintf(comment, sizeof(comment), "Function: %s", func_name);
+        multiarch_emit_comment(codegen, comment);
+    }
+
+    // Generate arguments and place in parameter registers
+    for (int i = 0; i < arg_count && i < codegen->target->num_param_regs; i++) {
+        multiarch_codegen_expression(codegen, node->data.call_expr.arguments[i]);
+        const char *param_reg = multiarch_get_param_reg(codegen, i);
+        const char *return_reg = multiarch_get_return_reg(codegen);
+
+        if (strcmp(param_reg, return_reg) != 0) {
+            // Move result to parameter register
+            switch (codegen->target->arch) {
+            case ARCH_X86_64:
+                multiarch_emit(codegen, "    movq %%%s, %%%s", return_reg, param_reg);
+                break;
+            case ARCH_ARM64:
+                multiarch_emit(codegen, "    mov %s, %s", param_reg, return_reg);
+                break;
+            default:
+                break;
+            }
+        }
+    }
+
+    // For macOS, prepend underscore to external symbols
+    char mangled_name[256];
+    if (codegen->target->platform == PLATFORM_MACOS && is_builtin) {
+        snprintf(mangled_name, sizeof(mangled_name), "_%s", func_name);
+    } else {
+        snprintf(mangled_name, sizeof(mangled_name), "%s", func_name);
+    }
+
+    multiarch_function_call(codegen, mangled_name, arg_count);
+}
