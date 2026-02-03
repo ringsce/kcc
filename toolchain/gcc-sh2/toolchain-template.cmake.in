@@ -1,0 +1,55 @@
+# toolchain/gcc-sh2/toolchain-template.cmake.in
+# CMake toolchain file for built GCC SH2 compiler
+
+set(CMAKE_SYSTEM_NAME Generic)
+set(CMAKE_SYSTEM_PROCESSOR sh2)
+
+# Toolchain paths
+set(TOOLCHAIN_PREFIX "@INSTALL_PREFIX@")
+set(TARGET_TRIPLET "sh-elf")
+
+# Specify the cross compiler
+set(CMAKE_C_COMPILER "${TOOLCHAIN_PREFIX}/bin/${TARGET_TRIPLET}-gcc")
+set(CMAKE_CXX_COMPILER "${TOOLCHAIN_PREFIX}/bin/${TARGET_TRIPLET}-g++")
+set(CMAKE_ASM_COMPILER "${TOOLCHAIN_PREFIX}/bin/${TARGET_TRIPLET}-as")
+set(CMAKE_AR "${TOOLCHAIN_PREFIX}/bin/${TARGET_TRIPLET}-ar")
+set(CMAKE_RANLIB "${TOOLCHAIN_PREFIX}/bin/${TARGET_TRIPLET}-ranlib")
+set(CMAKE_OBJCOPY "${TOOLCHAIN_PREFIX}/bin/${TARGET_TRIPLET}-objcopy")
+set(CMAKE_OBJDUMP "${TOOLCHAIN_PREFIX}/bin/${TARGET_TRIPLET}-objdump")
+set(CMAKE_SIZE "${TOOLCHAIN_PREFIX}/bin/${TARGET_TRIPLET}-size")
+
+# Specify the target environment
+set(CMAKE_FIND_ROOT_PATH "${TOOLCHAIN_PREFIX}/${TARGET_TRIPLET}")
+
+# Search for programs in the build host directories
+set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
+# Search for libraries and headers in the target directories
+set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
+set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
+
+# Sega Saturn specific flags
+set(SATURN_ARCH_FLAGS "-m2 -mb")
+set(SATURN_OPT_FLAGS "-O2 -ffunction-sections -fdata-sections")
+set(SATURN_WARN_FLAGS "-Wall -Wextra")
+
+set(CMAKE_C_FLAGS_INIT "${SATURN_ARCH_FLAGS} ${SATURN_WARN_FLAGS}")
+set(CMAKE_CXX_FLAGS_INIT "${SATURN_ARCH_FLAGS} ${SATURN_WARN_FLAGS}")
+set(CMAKE_ASM_FLAGS_INIT "${SATURN_ARCH_FLAGS}")
+
+# Optimization flags
+set(CMAKE_C_FLAGS_RELEASE "${SATURN_OPT_FLAGS} -DNDEBUG")
+set(CMAKE_CXX_FLAGS_RELEASE "${SATURN_OPT_FLAGS} -DNDEBUG")
+set(CMAKE_C_FLAGS_DEBUG "-g -O0 -DDEBUG")
+set(CMAKE_CXX_FLAGS_DEBUG "-g -O0 -DDEBUG")
+
+# Linker flags
+set(CMAKE_EXE_LINKER_FLAGS_INIT "-Wl,--gc-sections -specs=nosys.specs")
+
+# Static linking preference
+set(CMAKE_LINK_SEARCH_START_STATIC TRUE)
+set(CMAKE_LINK_SEARCH_END_STATIC TRUE)
+
+# Skip compiler checks (cross-compilation)
+set(CMAKE_C_COMPILER_WORKS 1)
+set(CMAKE_CXX_COMPILER_WORKS 1)

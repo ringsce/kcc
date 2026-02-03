@@ -13,6 +13,19 @@
 #define MAX_NODES 512
 #define MAX_IDENTIFIER_LENGTH 256
 #define MAX_STRING_LENGTH 1024
+#define TARGET_SH2 1
+// Architecture-specific settings
+#ifdef TARGET_SH2
+    #define WORD_SIZE 4          // 32-bit words
+    #define PTR_SIZE 4           // 32-bit pointers
+    #define BYTE_ORDER BIG_ENDIAN
+    #define ALIGNMENT 4          // 4-byte alignment for optimal performance
+    #define STACK_GROWS_DOWN 1   // Stack grows downward on SH-2
+#endif
+// Use KCC-specific names to avoid conflicts with system headers
+#define KCC_LITTLE_ENDIAN 1234
+#define KCC_BIG_ENDIAN 4321
+#define KCC_BYTE_ORDER KCC_BIG_ENDIAN
 
 // Include types first so all structs and enums are defined
 #include "types.h"
